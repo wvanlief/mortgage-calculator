@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentApport = 40000;
     let currentSavingsRate = 3.0;
     let currentOwnerCharges = 200;
+    let currentNotaryRate = 7.5; // Frais d'acquisition in %
     let currentAppreciation = 1.5;
     let currentRentInflation = 1.5;
 
@@ -72,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ownerChargesSlider = document.getElementById('owner-charges-slider');
     const appreciationInput = document.getElementById('appreciation-input');
     const rentInflationInput = document.getElementById('rent-inflation-input');
+    const notaryInput = document.getElementById('notary-input');
+    const notarySlider = document.getElementById('notary-slider');
 
     const buyRentBanner = document.getElementById('buy-rent-banner');
     const buyRentWinnerTitle = document.getElementById('buy-rent-winner-title');
@@ -84,6 +87,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const renterFinalWealth = document.getElementById('renter-final-wealth');
     const renterPortfolioPart = document.getElementById('renter-portfolio-part');
     const renterSpentPart = document.getElementById('renter-spent-part');
+
+    const buyerMonthlyCostLabel = document.getElementById('buyer-monthly-cost-label');
+    const renterMonthlyCostLabel = document.getElementById('renter-monthly-cost-label');
+    const savingsDirectionLabel = document.getElementById('savings-direction-label');
+    const monthlySavingsLabel = document.getElementById('monthly-savings-label');
+    const notaryFeesTotalLabel = document.getElementById('notary-fees-total-label');
 
     const breakevenLabel = document.getElementById('breakeven-label');
     const buyRentChartContainer = document.getElementById('buy-rent-chart-svg-container');
@@ -499,8 +508,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Investment compounding rates
         const monthlySavingsRate = Math.pow(1 + currentSavingsRate / 100, 1 / 12) - 1;
         
-        let renterPortfolio = currentApport; // Locataire investit son apport
-        let buyerPortfolio = 0; // Acheteur met son apport dans le bien
+        // Calculate notary fees (lost money for buyer at day 1)
+        const notaryFees = (currentCapital + currentApport) * (currentNotaryRate / 100);
+        
+        // Renter starts with apport + saved notary fees in cash portfolio
+        let renterPortfolio = currentApport + notaryFees; 
+        let buyerPortfolio = 0; // Buyer puts their apport into the down payment, begins with 0 savings
         let totalRentPaid = 0;
         
         const schedule = computeAmortizationSchedule(currentCapital, currentRate, currentDuration);
@@ -508,8 +521,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const points = [];
         points.push({
             month: 0,
-            buyerWealth: currentApport, // Capital + Apport (valeur bien) - Capital emprunté (dette initiale) = Apport
-            renterWealth: currentApport // Apport placé initialement
+            buyerWealth: currentApport, // Property (capital + apport) - loan (capital) = apport
+            renterWealth: currentApport + notaryFees // Renter has apport + saved notary fees in cash
         });
         
         let currentRentAmount = currentRent;
@@ -568,6 +581,23 @@ document.addEventListener('DOMContentLoaded', () => {
         buyerSavingsPart.textContent = `Portefeuille : ${formatCurrency(buyerPortfolio)}`;
         
         renterFinalWealth.textContent = formatCurrency(finalRenterWealth);
+        renterPortfolioPart.textContent = `Portefeuille : ${formatCurrency(finalRenterWealth)}`;
+        renterSpentPart.textContent = `Loyers payés : ${formatCurrency(totalRentPaid)}`;
+
+        // Update Transparency Breakdown Panel
+        const initialBuyCost = monthlyPayment + currentOwnerCharges;
+        buyerMonthlyCostLabel.textContent = formatCurrency(initialBuyCost);
+        renterMonthlyCostLabel.textContent = formatCurrency(currentRent);
+        notaryFeesTotalLabel.textContent = formatCurrency(notaryFees);
+
+        const initialSavings = initialBuyCost - currentRent;
+        if (initialSavings > 0) {
+            savingsDirectionLabel.textContent = "Épargne Mensuelle du Locataire :";
+            monthlySavingsLabel.textContent = formatCurrency(initialSavings);
+        } else {
+            savingsDirectionLabel.textContent = "Épargne Mensuelle de l'Acheteur :";
+            monthlySavingsLabel.textContent = formatCurrency(-initialSavings);
+        }
         renterPortfolioPart.textContent = `Portefeuille : ${formatCurrency(finalRenterWealth)}`;
         renterSpentPart.textContent = `Loyers payés : ${formatCurrency(totalRentPaid)}`;
         
@@ -935,6 +965,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBuyVsRentResults();
     });
 
+    // Notary Events
+    notarySlider.addEventListener('input', (e) => {
+        currentNotaryRate = parseFloat(e.target.value);
+        notaryInput.value = currentNotaryRate.toFixed(1);
+        updateBuyVsRentResults();
+    });
+
+    notaryInput.addEventListener('change', (e) => {
+        let val = parseFloat(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 20) val = 20;
+        currentNotaryRate = val;
+        notaryInput.value = val.toFixed(1);
+        if (val > notarySlider.max) notarySlider.max = Math.ceil(val);
+        notarySlider.value = val;
+        updateBuyVsRentResults();
+    });
+
     // Savings Rate Events
     savingsRateSlider.addEventListener('input', (e) => {
         currentSavingsRate = parseFloat(e.target.value);
@@ -1021,6 +1069,8 @@ document.addEventListener('DOMContentLoaded', () => {
     savingsRateSlider.value = currentSavingsRate;
     ownerChargesInput.value = currentOwnerCharges;
     ownerChargesSlider.value = currentOwnerCharges;
+    notaryInput.value = currentNotaryRate.toFixed(1);
+    notarySlider.value = currentNotaryRate;
     appreciationInput.value = currentAppreciation.toFixed(1);
     rentInflationInput.value = currentRentInflation.toFixed(1);
     

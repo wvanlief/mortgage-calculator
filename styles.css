@@ -1053,6 +1053,59 @@ body {
     margin-top: 0.15rem;
 }
 
+/* Budget Breakdown Panel */
+.budget-breakdown {
+    background: rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.breakdown-row {
+    display: grid;
+    grid-template-columns: 1.8fr 1fr 1.5fr;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.825rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.breakdown-row:last-child {
+    border-bottom: none;
+}
+
+.br-label {
+    color: var(--text-secondary);
+    font-weight: 550;
+    text-align: left;
+}
+
+.br-value {
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+.br-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-align: left;
+    margin-left: 1.5rem;
+}
+
+.highlight-row {
+    background: rgba(var(--accent-secondary-rgb), 0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(var(--accent-secondary-rgb), 0.15);
+}
+
+.highlight-row .br-value {
+    color: var(--accent-secondary);
+}
+
 /* Wealth Curve Chart */
 .buy-rent-chart-wrapper {
     background: var(--bg-card);
