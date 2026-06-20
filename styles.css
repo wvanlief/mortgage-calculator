@@ -1331,7 +1331,116 @@ body {
         justify-content: center;
         padding: 0.5rem;
         font-size: 0.8rem;
-    }
+}
+
+/* ==========================================================================
+   Project Cost & Estimated Fees Styling
+   ========================================================================== */
+
+/* Select Input Styling */
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-input {
+    width: 100%;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.65rem 2.2rem 0.65rem 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    transition: all 0.2s ease;
+}
+
+.select-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+.select-wrapper::after {
+    content: '▼';
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Budget Card & Fees Breakdown Styles */
+.budget-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.budget-card::before {
+    background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+}
+
+.fees-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.fee-label {
+    color: var(--text-secondary);
+}
+
+.fee-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.fee-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 0.5rem 0;
+}
+
+.fee-row.highlight-row {
+    font-size: 0.95rem;
+}
+
+.fee-row.highlight-row .fee-value {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.fee-row.credit-row {
+    font-size: 1.05rem;
+    padding: 0.65rem 0.85rem;
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px dashed rgba(var(--accent-primary-rgb), 0.25);
+    border-radius: 12px;
+    margin-top: 0.25rem;
+}
+
+.fee-row.credit-row .fee-label {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.fee-row.credit-row .highlight-text {
+    color: var(--accent-primary-hover);
+    font-weight: 800;
+}
 }
 
 /* ==========================================================================

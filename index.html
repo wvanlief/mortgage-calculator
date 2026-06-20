@@ -52,21 +52,64 @@
             <section class="simulator-panel">
                 <!-- Inputs Section -->
                 <div class="card control-card">
-                    <h2>Paramètres du Prêt</h2>
+                    <h2>Paramètres du Projet</h2>
                     
-                    <!-- Capital Input -->
+                    <!-- Region select -->
+                    <div class="input-group">
+                        <label for="region-select">Région de l'Acquisition</label>
+                        <div class="select-wrapper">
+                            <select id="region-select" class="select-input">
+                                <option value="wallonie" selected>Wallonie (3% Droits d'enreg. avec rénov.)</option>
+                                <option value="flandre">Flandre (2% Droits d'enreg. avec rénov.)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Purchase Price Input -->
                     <div class="input-group">
                         <div class="input-header">
-                            <label for="capital-input">Capital Emprunté</label>
+                            <label for="purchase-price-input">Prix d'Achat du Bien</label>
                             <div class="input-wrapper">
-                                <input type="number" id="capital-input" min="10000" max="2000000" step="5000" value="397858">
+                                <input type="number" id="purchase-price-input" min="10000" max="2000000" step="5000" value="450000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
-                        <input type="range" id="capital-slider" min="10000" max="1000000" step="1000" value="397858" class="range-slider">
+                        <input type="range" id="purchase-price-slider" min="10000" max="1000000" step="5000" value="450000" class="range-slider">
                         <div class="range-labels">
                             <span>10k €</span>
                             <span>1M €</span>
+                        </div>
+                    </div>
+
+                    <!-- Renovations Input -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="renovations-input">Travaux / Rénovations</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="renovations-input" min="0" max="1000000" step="1000" value="50000">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                        <input type="range" id="renovations-slider" min="0" max="300000" step="5000" value="50000" class="range-slider">
+                        <div class="range-labels">
+                            <span>0 €</span>
+                            <span>300k €</span>
+                        </div>
+                    </div>
+
+                    <!-- Fonds propres / Apport -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="fonds-propres-input">Fonds Propres (Apport)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="fonds-propres-input" min="0" max="2000000" step="5000" value="130000">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                        <input type="range" id="fonds-propres-slider" min="0" max="500000" step="5000" value="130000" class="range-slider">
+                        <div class="range-labels">
+                            <span>0 €</span>
+                            <span>500k €</span>
                         </div>
                     </div>
 
@@ -75,7 +118,7 @@
                         <div class="input-header">
                             <label for="rate-input">Taux d'Intérêt (TAEG)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="rate-input" min="0.1" max="10" step="0.01" value="3.41">
+                                <input type="number" id="rate-input" min="0.1" max="15" step="0.01" value="3.41">
                                 <span class="input-unit">%</span>
                             </div>
                         </div>
@@ -99,6 +142,38 @@
                         <div class="range-labels">
                             <span>5 ans</span>
                             <span>35 ans</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget & Fees Breakdown Section -->
+                <div class="card budget-card">
+                    <h2>Budget & Frais de Transaction</h2>
+                    <div class="fees-breakdown">
+                        <div class="fee-row">
+                            <span class="fee-label">Droits d'Enregistrement :</span>
+                            <strong id="fee-registration" class="fee-value">0 €</strong>
+                        </div>
+                        <div class="fee-row">
+                            <span class="fee-label">Frais de Notaire (TVA incl.) :</span>
+                            <strong id="fee-notary" class="fee-value">0 €</strong>
+                        </div>
+                        <div class="fee-row">
+                            <span class="fee-label">Inscription Hypothécaire :</span>
+                            <strong id="fee-mortgage" class="fee-value">0 €</strong>
+                        </div>
+                        <div class="fee-row">
+                            <span class="fee-label">Frais de Dossier Argenta :</span>
+                            <strong id="fee-dossier" class="fee-value">350 €</strong>
+                        </div>
+                        <div class="fee-divider"></div>
+                        <div class="fee-row highlight-row">
+                            <span class="fee-label">Coût Total du Projet :</span>
+                            <strong id="total-project-cost" class="fee-value">0 €</strong>
+                        </div>
+                        <div class="fee-row credit-row">
+                            <span class="fee-label">Montant du Crédit (Calculé) :</span>
+                            <strong id="calculated-capital" class="fee-value highlight-text">0 €</strong>
                         </div>
                     </div>
                 </div>
@@ -298,19 +373,17 @@
                         </div>
                     </div>
 
-                    <!-- Notary/Agency Fees -->
+                    <!-- Notary/Agency Fees (Calculated) -->
                     <div class="input-group">
                         <div class="input-header">
-                            <label for="notary-input">Frais d'Acquisition (Notaire/Agence)</label>
+                            <label for="notary-input">Frais d'Acquisition (Calculés du projet)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="notary-input" min="0" max="20" step="0.1" value="7.5">
+                                <input type="text" id="notary-input" readonly class="readonly-input">
                                 <span class="input-unit">%</span>
                             </div>
                         </div>
-                        <input type="range" id="notary-slider" min="0" max="15" step="0.5" value="7.5" class="range-slider">
                         <div class="range-labels">
-                            <span>0 % (Neuf)</span>
-                            <span>15 % (Ancien + Agence)</span>
+                            <span>Mise à jour automatique basée sur l'achat</span>
                         </div>
                     </div>
 

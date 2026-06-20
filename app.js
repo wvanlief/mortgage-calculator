@@ -6,7 +6,11 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- State Variables ---
-    let currentCapital = 397858;
+    let currentRegion = 'wallonie';
+    let currentPurchasePrice = 450000;
+    let currentRenovations = 50000;
+    let currentFondsPropres = 130000;
+    let currentCapital = 397858; // Calculated dynamically
     let currentRate = 3.41; // TAEG in %
     let currentDuration = 25; // in years
     let amortizationView = 'annual'; // 'annual' or 'monthly'
@@ -14,10 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Buy vs Rent State Variables ---
     let currentRent = 1200;
-    let currentApport = 40000;
+    let currentApport = 130000; // Synchronized with currentFondsPropres
     let currentSavingsRate = 3.0;
     let currentOwnerCharges = 200;
-    let currentNotaryRate = 7.5; // Frais d'acquisition in %
+    let currentNotaryRate = 7.5; // Frais d'acquisition in % (customizable in advanced)
     let currentAppreciation = 1.5;
     let currentRentInflation = 1.5;
 
@@ -27,8 +31,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DOM Elements ---
     // Inputs & Sliders
-    const capitalInput = document.getElementById('capital-input');
-    const capitalSlider = document.getElementById('capital-slider');
+    const regionSelect = document.getElementById('region-select');
+    const purchasePriceInput = document.getElementById('purchase-price-input');
+    const purchasePriceSlider = document.getElementById('purchase-price-slider');
+    const renovationsInput = document.getElementById('renovations-input');
+    const renovationsSlider = document.getElementById('renovations-slider');
+    const fondsPropresInput = document.getElementById('fonds-propres-input');
+    const fondsPropresSlider = document.getElementById('fonds-propres-slider');
+    
+    // Estimated Fees DOM elements
+    const feeRegistration = document.getElementById('fee-registration');
+    const feeNotary = document.getElementById('fee-notary');
+    const feeMortgage = document.getElementById('fee-mortgage');
+    const feeDossier = document.getElementById('fee-dossier');
+    const totalProjectCostEl = document.getElementById('total-project-cost');
+    const calculatedCapitalEl = document.getElementById('calculated-capital');
+
     const rateInput = document.getElementById('rate-input');
     const rateSlider = document.getElementById('rate-slider');
     const durationInput = document.getElementById('duration-input');
@@ -74,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const appreciationInput = document.getElementById('appreciation-input');
     const rentInflationInput = document.getElementById('rent-inflation-input');
     const notaryInput = document.getElementById('notary-input');
-    const notarySlider = document.getElementById('notary-slider');
 
     const buyRentBanner = document.getElementById('buy-rent-banner');
     const buyRentWinnerTitle = document.getElementById('buy-rent-winner-title');
@@ -116,6 +133,87 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Financial Calculations ---
+    /**
+     * Calculates notary fees for purchase act (Belgian regressive scale + 21% VAT)
+     */
+    function calculateNotaryFees(purchasePrice) {
+        if (purchasePrice <= 0) return 0;
+        
+        const brackets = [
+            { limit: 7575, rate: 0.0456 },
+            { limit: 17500, rate: 0.0285 },
+            { limit: 30025, rate: 0.0228 },
+            { limit: 45495, rate: 0.0171 },
+            { limit: 64020, rate: 0.0114 },
+            { limit: 250000, rate: 0.0057 },
+            { limit: Infinity, rate: 0.00057 }
+        ];
+        
+        let baseFees = 0;
+        let prevLimit = 0;
+        
+        for (const b of brackets) {
+            if (purchasePrice > prevLimit) {
+                const range = Math.min(purchasePrice, b.limit) - prevLimit;
+                baseFees += range * b.rate;
+                prevLimit = b.limit;
+            } else {
+                break;
+            }
+        }
+        
+        // Fixed administrative costs: 949.49 € (excl. VAT) as in Argenta PDF
+        const adminCostsExclVat = 949.49;
+        const totalExclVat = baseFees + adminCostsExclVat;
+        
+        // 21% VAT
+        return totalExclVat * 1.21;
+    }
+
+    /**
+     * Calculates mortgage registry inscription fees (Belgian regressive scale + VAT + duties + debours)
+     */
+    function calculateMortgageFee(loanAmount) {
+        if (loanAmount <= 0) return 0;
+        
+        // Registration duty: 1% of registered amount (loan + 10% accessories) = 1.1% of loan
+        const regDuty = loanAmount * 0.011;
+        
+        // Inscription duty: 0.3% of registered amount (loan + 10% accessories) = 0.33% of loan
+        const insDuty = loanAmount * 0.0033;
+        
+        // Notary mortgage fee scale (Barème B)
+        const brackets = [
+            { limit: 7575, rate: 0.0228 },
+            { limit: 17500, rate: 0.01425 },
+            { limit: 30025, rate: 0.0114 },
+            { limit: 45495, rate: 0.00855 },
+            { limit: 64020, rate: 0.0057 },
+            { limit: 250000, rate: 0.00285 },
+            { limit: Infinity, rate: 0.000285 }
+        ];
+        
+        let baseFees = 0;
+        let prevLimit = 0;
+        
+        for (const b of brackets) {
+            if (loanAmount > prevLimit) {
+                const range = Math.min(loanAmount, b.limit) - prevLimit;
+                baseFees += range * b.rate;
+                prevLimit = b.limit;
+            } else {
+                break;
+            }
+        }
+        
+        const notaryFeeInclVat = baseFees * 1.21;
+        
+        // Fixed administrative debours based on region
+        const debours = currentRegion === 'wallonie' ? 2534.65 : 2533.54;
+        
+        return regDuty + insDuty + notaryFeeInclVat + debours;
+    }
+
     /**
      * Calculates monthly payment (mensualité)
      */
@@ -471,12 +569,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Main Calculations Updates ---
     function updateSimulatorResults() {
+        // 1. Calculate Registration Duties based on region (Wallonia 3% vs Flanders 2% for primary residence with renovations)
+        const regRate = currentRegion === 'wallonie' ? 0.03 : 0.02;
+        const regDuties = currentPurchasePrice * regRate;
+
+        // 2. Calculate Notary Fees
+        const notaryFees = calculateNotaryFees(currentPurchasePrice);
+
+        // 3. Fixed Dossier Fee
+        const dossierFee = 350;
+
+        // 4. Calculate Mortgage Inscription Fee iteratively to solve circular dependency
+        let loanAmount = (currentPurchasePrice + currentRenovations + regDuties + notaryFees + dossierFee) - currentFondsPropres;
+        if (loanAmount < 0) loanAmount = 0;
+        
+        let mortgageFee = 0;
+        for (let i = 0; i < 5; i++) {
+            mortgageFee = calculateMortgageFee(loanAmount);
+            loanAmount = (currentPurchasePrice + currentRenovations + regDuties + notaryFees + dossierFee + mortgageFee) - currentFondsPropres;
+            if (loanAmount < 0) loanAmount = 0;
+        }
+
+        currentCapital = Math.round(loanAmount);
+
+        // 5. Total Project Cost
+        const totalProjectCost = currentPurchasePrice + currentRenovations + regDuties + notaryFees + mortgageFee + dossierFee;
+
+        // 6. Update Estimated Fees UI Elements
+        feeRegistration.textContent = formatCurrency(regDuties, true);
+        feeNotary.textContent = formatCurrency(notaryFees, true);
+        feeMortgage.textContent = formatCurrency(mortgageFee, true);
+        feeDossier.textContent = formatCurrency(dossierFee, true);
+        totalProjectCostEl.textContent = formatCurrency(totalProjectCost, true);
+        calculatedCapitalEl.textContent = formatCurrency(currentCapital);
+
         // Calculate Monthly payment
         const monthlyPayment = calculateMonthlyPayment(currentCapital, currentRate, currentDuration);
         const totalMonths = currentDuration * 12;
         const totalPaid = monthlyPayment * totalMonths;
         const totalInterest = totalPaid - currentCapital;
-        const costRatio = (totalInterest / currentCapital) * 100;
+        const costRatio = currentCapital > 0 ? (totalInterest / currentCapital) * 100 : 0;
 
         // Update Dashboard Elements
         monthlyPaymentVal.textContent = formatCurrency(monthlyPayment);
@@ -508,12 +640,21 @@ document.addEventListener('DOMContentLoaded', () => {
         // Investment compounding rates
         const monthlySavingsRate = Math.pow(1 + currentSavingsRate / 100, 1 / 12) - 1;
         
-        // Calculate notary fees (lost money for buyer at day 1)
-        const notaryFees = (currentCapital + currentApport) * (currentNotaryRate / 100);
+        // Calculate exact total transaction fees (lost money for buyer at day 1)
+        const regRate = currentRegion === 'wallonie' ? 0.03 : 0.02;
+        const regDuties = currentPurchasePrice * regRate;
+        const notaryFeesVal = calculateNotaryFees(currentPurchasePrice);
+        const mortgageFeeVal = calculateMortgageFee(currentCapital);
+        const totalFees = regDuties + notaryFeesVal + mortgageFeeVal + 350;
         
-        // Renter starts with apport + saved notary fees in cash portfolio
-        let renterPortfolio = currentApport + notaryFees; 
-        let buyerPortfolio = 0; // Buyer puts their apport into the down payment, begins with 0 savings
+        // Update read-only notary input rate percentage
+        const totalProjectBase = currentPurchasePrice + currentRenovations;
+        const feesPercentage = totalProjectBase > 0 ? (totalFees / totalProjectBase) * 100 : 0;
+        notaryInput.value = feesPercentage.toFixed(2);
+        
+        // Renter starts with total own funds (which covers down payment + fees for buyer)
+        let renterPortfolio = currentFondsPropres; 
+        let buyerPortfolio = 0; // Buyer puts their apport into the down payment/fees, begins with 0 savings
         let totalRentPaid = 0;
         
         const schedule = computeAmortizationSchedule(currentCapital, currentRate, currentDuration);
@@ -521,8 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const points = [];
         points.push({
             month: 0,
-            buyerWealth: currentApport, // Property (capital + apport) - loan (capital) = apport
-            renterWealth: currentApport + notaryFees // Renter has apport + saved notary fees in cash
+            buyerWealth: (currentPurchasePrice + currentRenovations) - currentCapital, // Property (purchase + renovations) - loan
+            renterWealth: currentFondsPropres 
         });
         
         let currentRentAmount = currentRent;
@@ -552,7 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Appreciated property value over time
-            const propertyValue = (currentCapital + currentApport) * Math.pow(1 + currentAppreciation / 100, m / 12);
+            const propertyValue = (currentPurchasePrice + currentRenovations) * Math.pow(1 + currentAppreciation / 100, m / 12);
             
             // Remaining loan balance
             const remainingLoan = schedule[m - 1] ? schedule[m - 1].remainingBalance : 0;
@@ -570,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const finalBuyerWealth = points[totalMonths].buyerWealth;
         const finalRenterWealth = points[totalMonths].renterWealth;
-        const finalPropertyValue = (currentCapital + currentApport) * Math.pow(1 + currentAppreciation / 100, currentDuration);
+        const finalPropertyValue = (currentPurchasePrice + currentRenovations) * Math.pow(1 + currentAppreciation / 100, currentDuration);
         
         // Cache variables for resize
         lastBuyVsRentPoints = points;
@@ -583,13 +724,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renterFinalWealth.textContent = formatCurrency(finalRenterWealth);
         renterPortfolioPart.textContent = `Portefeuille : ${formatCurrency(finalRenterWealth)}`;
         renterSpentPart.textContent = `Loyers payés : ${formatCurrency(totalRentPaid)}`;
-
+ 
         // Update Transparency Breakdown Panel
         const initialBuyCost = monthlyPayment + currentOwnerCharges;
         buyerMonthlyCostLabel.textContent = formatCurrency(initialBuyCost);
         renterMonthlyCostLabel.textContent = formatCurrency(currentRent);
-        notaryFeesTotalLabel.textContent = formatCurrency(notaryFees);
-
+        notaryFeesTotalLabel.textContent = formatCurrency(totalFees);
+ 
         const initialSavings = initialBuyCost - currentRent;
         if (initialSavings > 0) {
             savingsDirectionLabel.textContent = "Épargne Mensuelle du Locataire :";
@@ -608,7 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyRentWinnerTitle.textContent = "L'Achat est plus avantageux !";
             buyRentWinnerDiff.textContent = `+ ${formatCurrency(diffWealth)} de patrimoine net après ${currentDuration} ans`;
         } else {
-            buyRentBanner.className = "comparison-banner winner-renter";
+            buyRentBanner.className = "comparison-banner winner-renter";anner winner-renter";
             buyRentWinnerTitle.textContent = "La Location est plus avantageuse !";
             buyRentWinnerDiff.textContent = `+ ${formatCurrency(diffWealth)} de patrimoine net après ${currentDuration} ans`;
         }
@@ -760,26 +901,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listeners Setup ---
     
-    // Capital Input Events
-    capitalSlider.addEventListener('input', (e) => {
-        currentCapital = parseInt(e.target.value);
-        capitalInput.value = currentCapital;
+    // Region Selector
+    regionSelect.addEventListener('change', (e) => {
+        currentRegion = e.target.value;
         updateSimulatorResults();
     });
 
-    capitalInput.addEventListener('change', (e) => {
+    // Purchase Price Events
+    purchasePriceSlider.addEventListener('input', (e) => {
+        currentPurchasePrice = parseInt(e.target.value);
+        purchasePriceInput.value = currentPurchasePrice;
+        updateSimulatorResults();
+    });
+
+    purchasePriceInput.addEventListener('change', (e) => {
         let val = parseInt(e.target.value);
-        // Boundaries checks
         if (isNaN(val) || val < 10000) val = 10000;
         if (val > 2000000) val = 2000000;
-        
-        currentCapital = val;
-        capitalInput.value = val;
-        // Expand slider max if capital exceeds it
-        if (val > capitalSlider.max) {
-            capitalSlider.max = Math.ceil(val / 100000) * 100000;
+        currentPurchasePrice = val;
+        purchasePriceInput.value = val;
+        if (val > purchasePriceSlider.max) {
+            purchasePriceSlider.max = Math.ceil(val / 100000) * 100000;
         }
-        capitalSlider.value = val;
+        purchasePriceSlider.value = val;
+        updateSimulatorResults();
+    });
+
+    // Renovations Events
+    renovationsSlider.addEventListener('input', (e) => {
+        currentRenovations = parseInt(e.target.value);
+        renovationsInput.value = currentRenovations;
+        updateSimulatorResults();
+    });
+
+    renovationsInput.addEventListener('change', (e) => {
+        let val = parseInt(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 1000000) val = 1000000;
+        currentRenovations = val;
+        renovationsInput.value = val;
+        if (val > renovationsSlider.max) {
+            renovationsSlider.max = Math.ceil(val / 50000) * 50000;
+        }
+        renovationsSlider.value = val;
+        updateSimulatorResults();
+    });
+
+    // Fonds Propres Events
+    fondsPropresSlider.addEventListener('input', (e) => {
+        currentFondsPropres = parseInt(e.target.value);
+        fondsPropresInput.value = currentFondsPropres;
+        
+        // Sync to Buy vs Rent
+        currentApport = currentFondsPropres;
+        apportInput.value = currentApport;
+        apportSlider.value = currentApport;
+        
+        updateSimulatorResults();
+    });
+
+    fondsPropresInput.addEventListener('change', (e) => {
+        let val = parseInt(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 2000000) val = 2000000;
+        currentFondsPropres = val;
+        fondsPropresInput.value = val;
+        if (val > fondsPropresSlider.max) {
+            fondsPropresSlider.max = Math.ceil(val / 50000) * 50000;
+        }
+        fondsPropresSlider.value = val;
+        
+        // Sync to Buy vs Rent
+        currentApport = val;
+        apportInput.value = val;
+        if (val > apportSlider.max) {
+            apportSlider.max = Math.ceil(val / 50000) * 50000;
+        }
+        apportSlider.value = val;
+        
         updateSimulatorResults();
     });
 
@@ -951,7 +1150,13 @@ document.addEventListener('DOMContentLoaded', () => {
     apportSlider.addEventListener('input', (e) => {
         currentApport = parseInt(e.target.value);
         apportInput.value = currentApport;
-        updateBuyVsRentResults();
+        
+        // Synchronize with main Fonds Propres
+        currentFondsPropres = currentApport;
+        fondsPropresInput.value = currentFondsPropres;
+        fondsPropresSlider.value = currentFondsPropres;
+        
+        updateSimulatorResults();
     });
 
     apportInput.addEventListener('change', (e) => {
@@ -962,26 +1167,17 @@ document.addEventListener('DOMContentLoaded', () => {
         apportInput.value = val;
         if (val > apportSlider.max) apportSlider.max = Math.ceil(val/10000)*10000;
         apportSlider.value = val;
-        updateBuyVsRentResults();
+        
+        // Synchronize with main Fonds Propres
+        currentFondsPropres = val;
+        fondsPropresInput.value = currentFondsPropres;
+        if (val > fondsPropresSlider.max) fondsPropresSlider.max = Math.ceil(val/10000)*10000;
+        fondsPropresSlider.value = currentFondsPropres;
+        
+        updateSimulatorResults();
     });
 
-    // Notary Events
-    notarySlider.addEventListener('input', (e) => {
-        currentNotaryRate = parseFloat(e.target.value);
-        notaryInput.value = currentNotaryRate.toFixed(1);
-        updateBuyVsRentResults();
-    });
 
-    notaryInput.addEventListener('change', (e) => {
-        let val = parseFloat(e.target.value);
-        if (isNaN(val) || val < 0) val = 0;
-        if (val > 20) val = 20;
-        currentNotaryRate = val;
-        notaryInput.value = val.toFixed(1);
-        if (val > notarySlider.max) notarySlider.max = Math.ceil(val);
-        notarySlider.value = val;
-        updateBuyVsRentResults();
-    });
 
     // Savings Rate Events
     savingsRateSlider.addEventListener('input', (e) => {
@@ -1054,8 +1250,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialization ---
     // Make sure values match UI inputs initially
-    capitalInput.value = currentCapital;
-    capitalSlider.value = currentCapital;
+    regionSelect.value = currentRegion;
+    purchasePriceInput.value = currentPurchasePrice;
+    purchasePriceSlider.value = currentPurchasePrice;
+    renovationsInput.value = currentRenovations;
+    renovationsSlider.value = currentRenovations;
+    fondsPropresInput.value = currentFondsPropres;
+    fondsPropresSlider.value = currentFondsPropres;
+
     rateInput.value = currentRate.toFixed(2);
     rateSlider.value = currentRate;
     durationInput.value = currentDuration;
@@ -1069,8 +1271,6 @@ document.addEventListener('DOMContentLoaded', () => {
     savingsRateSlider.value = currentSavingsRate;
     ownerChargesInput.value = currentOwnerCharges;
     ownerChargesSlider.value = currentOwnerCharges;
-    notaryInput.value = currentNotaryRate.toFixed(1);
-    notarySlider.value = currentNotaryRate;
     appreciationInput.value = currentAppreciation.toFixed(1);
     rentInflationInput.value = currentRentInflation.toFixed(1);
     
