@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulateur dynamique de prêt immobilier. Calculez instantanément vos mensualités, le coût total de votre crédit, visualisez le tableau d'amortissement et comparez les taux d'intérêt.">
+    <title>Simulateur de Prêt Immobilier Dynamique</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 21V11.2426C19 10.447 18.6839 9.68388 18.1213 9.12132L13.5251 4.52513C12.6812 3.68118 11.3188 3.68118 10.4749 4.52513L5.87868 9.12132C5.31612 9.68388 5 10.447 5 11.2426V21C5 21.5523 5.44772 22 6 22H18C18.5523 22 19 21.5523 19 21Z" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 22V12H15V22" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3 9L12 2L21 9" stroke="var(--accent-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="header-titles">
+                    <h1>Simulateur de Prêt Immobilier</h1>
+                    <p class="subtitle">Outil interactif de simulation et d'analyse financière</p>
+                </div>
+            </div>
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Changer de thème">
+                <!-- Sun Icon -->
+                <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- Moon Icon -->
+                <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Left Side: Simulator Controls & Main Results -->
+            <section class="simulator-panel">
+                <!-- Inputs Section -->
+                <div class="card control-card">
+                    <h2>Paramètres du Prêt</h2>
+                    
+                    <!-- Capital Input -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="capital-input">Capital Emprunté</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="capital-input" min="10000" max="2000000" step="5000" value="397858">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                        <input type="range" id="capital-slider" min="10000" max="1000000" step="1000" value="397858" class="range-slider">
+                        <div class="range-labels">
+                            <span>10k €</span>
+                            <span>1M €</span>
+                        </div>
+                    </div>
+
+                    <!-- Interest Rate Input -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="rate-input">Taux d'Intérêt (TAEG)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="rate-input" min="0.1" max="10" step="0.01" value="3.41">
+                                <span class="input-unit">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rate-slider" min="0.5" max="8.0" step="0.05" value="3.41" class="range-slider">
+                        <div class="range-labels">
+                            <span>0.5 %</span>
+                            <span>8.0 %</span>
+                        </div>
+                    </div>
+
+                    <!-- Duration Input -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="duration-input">Durée du Prêt</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="duration-input" min="1" max="40" step="1" value="25">
+                                <span class="input-unit">ans</span>
+                            </div>
+                        </div>
+                        <input type="range" id="duration-slider" min="5" max="35" step="1" value="25" class="range-slider">
+                        <div class="range-labels">
+                            <span>5 ans</span>
+                            <span>35 ans</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Metrics Cards -->
+                <div class="metrics-grid">
+                    <div class="metric-card highlight-metric">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="4"></line>
+                                <line x1="8" y1="2" x2="8" y2="4"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">Mensualité</span>
+                            <span id="monthly-payment-val" class="metric-value">0 €</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"></line>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">Coût du Crédit</span>
+                            <span id="total-interest-val" class="metric-value">0 €</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                                <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">Taux de Coût</span>
+                            <span id="cost-ratio-val" class="metric-value">0 %</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">Total Remboursé</span>
+                            <span id="total-paid-val" class="metric-value">0 €</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Visualizations and Comparison Matrix -->
+            <section class="analysis-panel">
+                <!-- Charts Card -->
+                <div class="card visual-card">
+                    <div class="tabs-header">
+                        <button id="tab-btn-donut" class="tab-btn active" data-tab="donut-tab">Structure du Coût</button>
+                        <button id="tab-btn-line" class="tab-btn" data-tab="line-tab">Courbe de Remboursement</button>
+                    </div>
+                    
+                    <div class="tabs-content">
+                        <!-- Donut Chart Tab -->
+                        <div id="donut-tab" class="tab-panel active">
+                            <div class="chart-container donut-layout">
+                                <div id="donut-chart-svg-container" class="svg-chart-wrapper">
+                                    <!-- SVG Donut Chart will be injected here -->
+                                </div>
+                                <div class="chart-legend">
+                                    <div class="legend-item">
+                                        <span class="legend-color capital-color"></span>
+                                        <div class="legend-details">
+                                            <span class="legend-name">Capital Emprunté</span>
+                                            <span id="legend-capital-val" class="legend-val">0 €</span>
+                                        </div>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color interest-color"></span>
+                                        <div class="legend-details">
+                                            <span class="legend-name">Intérêts Totaux</span>
+                                            <span id="legend-interest-val" class="legend-val">0 €</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Line Chart Tab -->
+                        <div id="line-tab" class="tab-panel">
+                            <div class="chart-container line-layout">
+                                <div id="line-chart-svg-container" class="svg-chart-wrapper">
+                                    <!-- SVG Area/Line Chart will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Grid -->
+                <div class="card comparison-card">
+                    <div class="comparison-header">
+                        <h2>Matrice de Comparaison des Mensualités</h2>
+                        <p class="description">Mensualités selon le TAEG et la durée (Capital fixe : <span id="comparison-capital-label">0</span> €)</p>
+                    </div>
+                    <div class="table-scroll-container">
+                        <table class="grid-table" id="comparison-grid-table">
+                            <!-- Matrix Header and rows generated by JS -->
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Buy vs Rent Comparison Section -->
+        <section class="buy-rent-section card">
+            <div class="buy-rent-header">
+                <h2>Comparatif Financier : Acheter vs. Louer</h2>
+                <p class="description">Comparez la création de richesse nette entre l'achat de votre bien et la location d'un bien similaire avec placement de l'apport et du surplus mensuel de trésorerie.</p>
+            </div>
+            
+            <div class="buy-rent-grid">
+                <!-- Inputs Column -->
+                <div class="buy-rent-inputs">
+                    <h3>Hypothèses de Location & Épargne</h3>
+                    
+                    <!-- Monthly Rent -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="rent-input">Loyer Initial</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="rent-input" min="100" max="10000" step="50" value="1200">
+                                <span class="input-unit">€/mois</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rent-slider" min="300" max="4000" step="50" value="1200" class="range-slider">
+                        <div class="range-labels">
+                            <span>300 €</span>
+                            <span>4 000 €</span>
+                        </div>
+                    </div>
+
+                    <!-- Down Payment / Apport -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="apport-input">Apport Personnel (Investi par le locataire)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="apport-input" min="0" max="1000000" step="5000" value="40000">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                        <input type="range" id="apport-slider" min="0" max="300000" step="2000" value="40000" class="range-slider">
+                        <div class="range-labels">
+                            <span>0 €</span>
+                            <span>300k €</span>
+                        </div>
+                    </div>
+
+                    <!-- Savings return rate / Rendement -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="savings-rate-input">Rendement Annuel de l'Épargne</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="savings-rate-input" min="0" max="15" step="0.1" value="3.0">
+                                <span class="input-unit">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="savings-rate-slider" min="0" max="10" step="0.1" value="3.0" class="range-slider">
+                        <div class="quick-presets">
+                            <button type="button" class="preset-btn" data-val="1.0">1% (Livret A)</button>
+                            <button type="button" class="preset-btn active" data-val="3.0">3% (Sécurités)</button>
+                            <button type="button" class="preset-btn" data-val="5.0">5% (Actions)</button>
+                        </div>
+                    </div>
+
+                    <!-- Owner charges -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="owner-charges-input">Charges Propriétaire Mensuelles</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="owner-charges-input" min="0" max="5000" step="20" value="200">
+                                <span class="input-unit">€/mois</span>
+                            </div>
+                        </div>
+                        <input type="range" id="owner-charges-slider" min="0" max="1000" step="10" value="200" class="range-slider">
+                        <div class="range-labels">
+                            <span>0 €</span>
+                            <span>1 000 €</span>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Parameters Accordion -->
+                    <details class="advanced-params">
+                        <summary>Hypothèses Avancées (Appréciation & Inflation)</summary>
+                        <div class="advanced-grid">
+                            <div class="input-group">
+                                <label for="appreciation-input">Appréciation Immobilière /an</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="appreciation-input" min="-5" max="10" step="0.1" value="1.5">
+                                    <span class="input-unit">%</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="rent-inflation-input">Inflation des Loyers /an</label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="rent-inflation-input" min="0" max="10" step="0.1" value="1.5">
+                                    <span class="input-unit">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+                
+                <!-- Results & Chart Column -->
+                <div class="buy-rent-results">
+                    <!-- Winner Banner -->
+                    <div id="buy-rent-banner" class="comparison-banner winner-buyer">
+                        <span class="banner-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                        </span>
+                        <div class="banner-text">
+                            <span class="banner-title" id="buy-rent-winner-title">L'Achat est gagnant</span>
+                            <span class="banner-diff" id="buy-rent-winner-diff">+ 0 € de patrimoine après 25 ans</span>
+                        </div>
+                    </div>
+
+                    <!-- Wealth Stats Cards -->
+                    <div class="wealth-cards-container">
+                        <div class="wealth-card buyer-wealth-card">
+                            <div class="w-card-header">
+                                <span class="w-card-dot buyer-dot"></span>
+                                <span class="w-card-title">Patrimoine de l'Acheteur</span>
+                            </div>
+                            <div class="w-card-body">
+                                <span id="buyer-final-wealth" class="w-card-val">0 €</span>
+                                <span class="w-card-sub" id="buyer-property-part">Valeur bien : 0 €</span>
+                                <span class="w-card-sub" id="buyer-savings-part">Portefeuille : 0 €</span>
+                            </div>
+                        </div>
+
+                        <div class="wealth-card renter-wealth-card">
+                            <div class="w-card-header">
+                                <span class="w-card-dot renter-dot"></span>
+                                <span class="w-card-title">Patrimoine du Locataire</span>
+                            </div>
+                            <div class="w-card-body">
+                                <span id="renter-final-wealth" class="w-card-val">0 €</span>
+                                <span class="w-card-sub" id="renter-portfolio-part">Portefeuille : 0 €</span>
+                                <span class="w-card-sub" id="renter-spent-part">Loyers payés : 0 €</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wealth Graph -->
+                    <div class="buy-rent-chart-wrapper">
+                        <div class="chart-title-area">
+                            <h4>Évolution de la Valeur Nette du Patrimoine</h4>
+                            <span id="breakeven-label" class="breakeven-badge">Seuil de rentabilité : -</span>
+                        </div>
+                        <div id="buy-rent-chart-svg-container" class="svg-chart-wrapper buy-rent-chart">
+                            <!-- SVG comparison line chart injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom: Detailed Amortization Table -->
+        <footer class="app-footer">
+            <section class="amortization-section card">
+                <div class="section-header">
+                    <div class="title-area">
+                        <h2>Tableau d'Amortissement détaillé</h2>
+                        <div class="table-toggles">
+                            <button id="toggle-annual-btn" class="toggle-btn active" data-view="annual">Vue Annuelle</button>
+                            <button id="toggle-monthly-btn" class="toggle-btn" data-view="monthly">Vue Mensuelle</button>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="export-csv-btn" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Exporter CSV
+                        </button>
+                        <button id="print-btn" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            Imprimer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-scroll-container amortization-table-wrapper">
+                    <table class="amortization-table" id="amortization-schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Période</th>
+                                <th>Mensualité</th>
+                                <th>Intérêts</th>
+                                <th>Capital Amorti</th>
+                                <th>Capital Restant Dû</th>
+                            </tr>
+                        </thead>
+                        <tbody id="amortization-tbody">
+                            <!-- Table rows generated dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </footer>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

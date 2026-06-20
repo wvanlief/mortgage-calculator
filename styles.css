@@ -1,0 +1,1192 @@
+/* ==========================================================================
+   French Mortgage Loan Simulator Stylesheet
+   Design Style: Modern Premium Dark Mode (Default) / Light Mode (Toggle)
+   ========================================================================== */
+
+/* Variables & Themes */
+:root[data-theme="dark"] {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #182232;
+    --bg-card-hover: #1e2b3e;
+    
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    
+    --accent-primary: #10b981; /* Emerald */
+    --accent-primary-rgb: 16, 185, 129;
+    --accent-primary-hover: #34d399;
+    --accent-secondary: #6366f1; /* Indigo */
+    --accent-secondary-rgb: 99, 102, 241;
+    
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-hover: rgba(255, 255, 255, 0.15);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+    --card-glow: rgba(16, 185, 129, 0.03);
+    
+    --glass-bg: rgba(24, 34, 50, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="light"] {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    
+    --accent-primary: #059669; /* Rich Emerald */
+    --accent-primary-rgb: 5, 150, 105;
+    --accent-primary-hover: #047857;
+    --accent-secondary: #4f46e5; /* Indigo */
+    --accent-secondary-rgb: 79, 70, 229;
+    
+    --border-color: rgba(15, 23, 42, 0.08);
+    --border-color-hover: rgba(15, 23, 42, 0.15);
+    --shadow-color: rgba(15, 23, 42, 0.05);
+    --shadow-premium: 0 10px 30px -10px rgba(15, 23, 42, 0.1);
+    --card-glow: rgba(5, 150, 105, 0.02);
+    
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(15, 23, 42, 0.06);
+}
+
+/* Reset & Base Styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    overflow-x: hidden;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 1400px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1.5rem;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-titles h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-titles .subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.15rem;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px var(--shadow-color);
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+:root[data-theme="dark"] .sun-icon {
+    display: block;
+}
+:root[data-theme="dark"] .moon-icon {
+    display: none;
+}
+:root[data-theme="light"] .sun-icon {
+    display: none;
+}
+:root[data-theme="light"] .moon-icon {
+    display: block;
+}
+
+/* Grid Layouts */
+.app-main {
+    display: grid;
+    grid-template-columns: 1.2fr 1.8fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .app-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cards & Containers */
+.card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: var(--shadow-premium);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    opacity: 0.7;
+}
+
+.card:hover {
+    border-color: rgba(var(--accent-primary-rgb), 0.2);
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.2px;
+}
+
+/* Inputs & Form Styling */
+.control-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.input-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-header label {
+    font-size: 0.95rem;
+    font-weight: 550;
+    color: var(--text-secondary);
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper input[type="number"] {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 2.2rem 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    width: 140px;
+    text-align: right;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.input-wrapper input[type="number"]:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+.input-unit {
+    position: absolute;
+    right: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+/* Range Sliders */
+.range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border-color);
+    outline: none;
+    transition: background 0.3s;
+}
+
+.range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(var(--accent-primary-rgb), 0.4);
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-primary-hover);
+}
+
+.range-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 10px rgba(var(--accent-primary-rgb), 0.4);
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+.range-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-primary-hover);
+}
+
+.range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Metrics Dashboard */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-color-hover);
+}
+
+.metric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(var(--accent-secondary-rgb), 0.1);
+    color: var(--accent-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-top: 0.25rem;
+}
+
+/* Highlight the main monthly payment card */
+.highlight-metric {
+    background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.12), rgba(var(--accent-secondary-rgb), 0.05));
+    border-color: rgba(var(--accent-primary-rgb), 0.25);
+}
+
+.highlight-metric .metric-icon {
+    background: var(--accent-primary);
+    color: #ffffff;
+}
+
+.highlight-metric .metric-value {
+    color: var(--accent-primary-hover);
+    font-size: 1.4rem;
+}
+
+/* Tabs & Visual Card */
+.visual-card {
+    padding: 1.5rem;
+    min-height: 380px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    background: var(--border-color);
+}
+
+.tab-btn.active {
+    color: #ffffff;
+    background: var(--accent-primary);
+}
+
+.tabs-content {
+    flex-grow: 1;
+    position: relative;
+}
+
+.tab-panel {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.tab-panel.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* SVG Chart Styles */
+.chart-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    min-height: 250px;
+}
+
+.donut-layout {
+    gap: 2rem;
+}
+
+@media (max-width: 600px) {
+    .donut-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+}
+
+.svg-chart-wrapper {
+    width: 100%;
+    max-width: 250px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.line-layout .svg-chart-wrapper {
+    max-width: 100%;
+    height: 280px;
+}
+
+/* Donut Chart Inner Styles */
+.donut-segment {
+    transition: stroke-dashoffset 0.35s ease-in-out;
+}
+
+.donut-text-val {
+    font-size: 18px;
+    font-weight: 700;
+    fill: var(--text-primary);
+    text-anchor: middle;
+}
+
+.donut-text-label {
+    font-size: 8px;
+    font-weight: 600;
+    fill: var(--text-secondary);
+    text-anchor: middle;
+}
+
+/* Chart Legends */
+.chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.capital-color {
+    background-color: var(--accent-secondary);
+}
+
+.interest-color {
+    background-color: var(--accent-primary);
+}
+
+.legend-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.legend-name {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.legend-val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* SVG Line Chart Elements */
+.chart-grid-line {
+    stroke: var(--border-color);
+    stroke-width: 1;
+    stroke-dasharray: 4, 4;
+}
+
+.chart-axis-line {
+    stroke: var(--text-muted);
+    stroke-width: 1.5;
+}
+
+.chart-axis-text {
+    fill: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.chart-area-capital {
+    fill: url(#capital-grad);
+    opacity: 0.15;
+}
+
+.chart-area-interest {
+    fill: url(#interest-grad);
+    opacity: 0.15;
+}
+
+.chart-line-capital {
+    stroke: var(--accent-secondary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.chart-line-interest {
+    stroke: var(--accent-primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+/* Comparison Matrix Styling */
+.comparison-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.comparison-header {
+    margin-bottom: 1.25rem;
+}
+
+.comparison-header h2 {
+    margin-bottom: 0.25rem;
+}
+
+.comparison-header .description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.table-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+}
+
+.grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.grid-table th, .grid-table td {
+    padding: 0.75rem 0.5rem;
+    border: 1px solid var(--border-color);
+    min-width: 60px;
+}
+
+.grid-table th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.grid-table th:first-child {
+    font-weight: 700;
+    color: var(--text-primary);
+    position: sticky;
+    left: 0;
+    background-color: var(--bg-secondary);
+    z-index: 2;
+}
+
+.grid-table td:first-child {
+    font-weight: 700;
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    border-right: 2px solid var(--border-color);
+}
+
+.grid-table tr:hover td {
+    background-color: rgba(var(--accent-secondary-rgb), 0.03);
+}
+
+.grid-table td.highlight-cell {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: cellPulse 2s infinite ease-in-out;
+}
+
+@keyframes cellPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.85; }
+    100% { opacity: 1; }
+}
+
+/* Amortization Section Styling */
+.amortization-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.amortization-section::before {
+    background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.title-area {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.title-area h2 {
+    margin-bottom: 0;
+}
+
+/* Toggle Buttons */
+.table-toggles {
+    display: flex;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    padding: 3px;
+    border-radius: 10px;
+}
+
+.toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.35rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-btn.active {
+    background: var(--bg-card);
+    color: var(--accent-primary-hover);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Normal Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-secondary {
+    background: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary-hover);
+    background: var(--bg-secondary);
+}
+
+/* Amortization Table Scroll Wrapper */
+.amortization-table-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.amortization-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+.amortization-table th, .amortization-table td {
+    padding: 0.85rem 1.2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.amortization-table th {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.amortization-table th:first-child, .amortization-table td:first-child {
+    text-align: left;
+}
+
+.amortization-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.amortization-table tbody tr:hover {
+    background-color: rgba(var(--accent-primary-rgb), 0.02);
+}
+
+.amortization-table tbody tr:last-child {
+    font-weight: 700;
+    background-color: var(--bg-secondary);
+}
+
+.amortization-table tbody tr:last-child td {
+    border-top: 2px solid var(--border-color);
+    border-bottom: none;
+}
+
+/* Scrollbar Customization */
+.table-scroll-container::-webkit-scrollbar,
+.amortization-table-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track,
+.amortization-table-wrapper::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb,
+.amortization-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover,
+.amortization-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ==========================================================================
+   Buy vs Rent Section Styles
+   ========================================================================== */
+.buy-rent-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.buy-rent-section::before {
+    background: linear-gradient(90deg, var(--accent-secondary), #f59e0b);
+}
+
+.buy-rent-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 2rem;
+}
+
+@media (max-width: 900px) {
+    .buy-rent-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.buy-rent-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color);
+}
+
+.buy-rent-inputs h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.quick-presets {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.preset-btn {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.35rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.preset-btn:hover {
+    border-color: var(--accent-secondary);
+    color: var(--text-primary);
+}
+
+.preset-btn.active {
+    background: var(--accent-secondary);
+    border-color: var(--accent-secondary);
+    color: #ffffff;
+}
+
+.advanced-params {
+    margin-top: 0.5rem;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 0.75rem;
+}
+
+.advanced-params summary {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+}
+
+.advanced-params summary:hover {
+    color: var(--text-primary);
+}
+
+.advanced-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@media (max-width: 480px) {
+    .advanced-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.buy-rent-results {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Winner Banner */
+.comparison-banner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.winner-buyer {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    color: var(--accent-primary-hover);
+}
+
+.winner-buyer .banner-icon {
+    color: var(--accent-primary);
+}
+
+.winner-renter {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.winner-renter .banner-icon {
+    color: #f59e0b;
+}
+
+.banner-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.banner-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.banner-diff {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-top: 0.15rem;
+}
+
+/* Wealth Cards side by side */
+.wealth-cards-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 480px) {
+    .wealth-cards-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.wealth-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.wealth-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-color-hover);
+}
+
+.w-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.w-card-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.buyer-dot {
+    background-color: var(--accent-primary);
+}
+
+.renter-dot {
+    background-color: #f59e0b;
+}
+
+.w-card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.w-card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.w-card-val {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.w-card-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+
+/* Wealth Curve Chart */
+.buy-rent-chart-wrapper {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.chart-title-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.chart-title-area h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.breakeven-badge {
+    background: rgba(var(--accent-secondary-rgb), 0.1);
+    color: var(--accent-secondary);
+    border: 1px solid rgba(var(--accent-secondary-rgb), 0.2);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+}
+
+.buy-rent-chart {
+    height: 220px;
+}
+
+.chart-line-buyer {
+    stroke: var(--accent-primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.chart-line-renter {
+    stroke: #f59e0b;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.chart-area-buyer {
+    fill: url(#buyer-wealth-grad);
+    opacity: 0.12;
+}
+
+.chart-area-renter {
+    fill: url(#renter-wealth-grad);
+    opacity: 0.12;
+}
+
+.chart-intersection-point {
+    fill: var(--accent-secondary);
+    stroke: #ffffff;
+    stroke-width: 2;
+    r: 5;
+}
+
+/* ==========================================================================
+   Print Stylesheet (@media print)
+   ========================================================================== */
+@media print {
+    body {
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 11pt;
+    }
+    
+    .app-container {
+        padding: 0;
+        max-width: 100%;
+    }
+    
+    .theme-toggle-btn,
+    .simulator-panel,
+    .visual-card,
+    .comparison-card,
+    .action-buttons,
+    .table-toggles,
+    .buy-rent-inputs,
+    .buy-rent-chart-wrapper {
+        display: none !important;
+    }
+    
+    .buy-rent-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+    
+    .card::before {
+        display: none !important;
+    }
+    
+    .app-main {
+        grid-template-columns: 1fr;
+    }
+    
+    .amortization-section {
+        display: block !important;
+    }
+    
+    .amortization-table-wrapper {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    
+    .amortization-table th {
+        background-color: #f1f5f9 !important;
+        color: #000000 !important;
+        border-bottom: 2px solid #000000 !important;
+        position: static !important;
+    }
+    
+    .amortization-table td {
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+}
