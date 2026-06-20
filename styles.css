@@ -1179,6 +1179,162 @@ body {
 }
 
 /* ==========================================================================
+   Mobile Responsiveness Upgrades (max-width: 600px)
+   ========================================================================== */
+@media (max-width: 600px) {
+    .app-container {
+        padding: 1rem 0.75rem;
+        gap: 1.25rem;
+    }
+
+    .app-header {
+        position: relative;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+    }
+
+    .header-logo {
+        gap: 0.75rem;
+    }
+
+    .header-titles h1 {
+        font-size: 1.35rem;
+    }
+
+    .header-titles .subtitle {
+        font-size: 0.75rem;
+    }
+
+    .theme-toggle-btn {
+        position: absolute;
+        top: 0.25rem;
+        right: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+    }
+
+    .card {
+        padding: 1.25rem 1rem;
+        border-radius: 18px;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .metric-card {
+        padding: 1rem;
+        gap: 0.75rem;
+    }
+
+    .metric-value {
+        font-size: 1.15rem;
+    }
+
+    .highlight-metric .metric-value {
+        font-size: 1.25rem;
+    }
+
+    /* Form control layout adjustments */
+    .input-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .input-header label {
+        font-size: 0.875rem;
+    }
+
+    .input-wrapper {
+        width: 100%;
+    }
+
+    .input-wrapper input[type="number"] {
+        width: 100%;
+        text-align: left;
+        padding-left: 0.75rem;
+        padding-right: 2.2rem;
+    }
+
+    /* Tabs buttons text and layout */
+    .tabs-header {
+        gap: 0.25rem;
+    }
+
+    .tab-btn {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.60rem;
+        flex: 1;
+        text-align: center;
+    }
+
+    /* Budget transparency breakdown row stacking */
+    .breakdown-row {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .br-value {
+        text-align: left;
+        font-size: 0.95rem;
+    }
+
+    .br-sub {
+        margin-left: 0;
+        font-size: 0.7rem;
+    }
+
+    .highlight-row {
+        padding: 0.75rem;
+    }
+
+    /* Amortization schedule header controls stacking */
+    .section-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .title-area {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .table-toggles {
+        width: 100%;
+        display: flex;
+    }
+
+    .toggle-btn {
+        flex: 1;
+        text-align: center;
+        padding: 0.4rem;
+        font-size: 0.75rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        width: 100%;
+    }
+
+    .action-buttons .btn {
+        flex: 1;
+        justify-content: center;
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* ==========================================================================
    Print Stylesheet (@media print)
    ========================================================================== */
 @media print {
