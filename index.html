@@ -46,8 +46,21 @@
             </button>
         </header>
 
-        <!-- Main Content -->
-        <main class="app-main">
+        <!-- Main Navigation Tabs -->
+        <nav class="main-nav">
+            <button id="nav-btn-simulator" class="nav-item active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line></svg>
+                Simulateur & Budget
+            </button>
+            <button id="nav-btn-equivalence" class="nav-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Équivalence Régionale
+            </button>
+        </nav>
+
+        <div id="simulator-tab-content">
+            <!-- Main Content -->
+            <main class="app-main">
             <!-- Left Side: Simulator Controls & Main Results -->
             <section class="simulator-panel">
                 <!-- Inputs Section -->
@@ -61,6 +74,7 @@
                             <select id="region-select" class="select-input">
                                 <option value="wallonie" selected>Wallonie (3% Droits d'enreg. avec rénov.)</option>
                                 <option value="flandre">Flandre (2% Droits d'enreg. avec rénov.)</option>
+                                <option value="bruxelles">Bruxelles-Capitale (12.5% — abattement 200k€)</option>
                             </select>
                         </div>
                     </div>
@@ -94,6 +108,22 @@
                         <div class="range-labels">
                             <span>0 €</span>
                             <span>300k €</span>
+                        </div>
+                    </div>
+
+                    <!-- Revenu Cadastral Input -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="rc-input">Revenu Cadastral (RC)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="rc-input" min="0" max="10000" step="50" value="1000">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                        <input type="range" id="rc-slider" min="0" max="4000" step="50" value="1000" class="range-slider">
+                        <div class="range-labels">
+                            <span>0 €</span>
+                            <span>4 000 €</span>
                         </div>
                     </div>
 
@@ -144,6 +174,26 @@
                             <span>35 ans</span>
                         </div>
                     </div>
+
+                    <!-- Monthly Net Income for Debt Ratio -->
+                    <div class="input-group income-separator">
+                        <div class="income-divider-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></svg>
+                            Profil de Financement
+                        </div>
+                        <div class="input-header">
+                            <label for="income-input">Revenu Net Mensuel du Foyer</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="income-input" min="500" max="50000" step="100" value="4500">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                        <input type="range" id="income-slider" min="500" max="15000" step="100" value="4500" class="range-slider">
+                        <div class="range-labels">
+                            <span>500 €</span>
+                            <span>15 000 €</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Budget & Fees Breakdown Section -->
@@ -151,7 +201,7 @@
                     <h2>Budget & Frais de Transaction</h2>
                     <div class="fees-breakdown">
                         <div class="fee-row">
-                            <span class="fee-label">Droits d'Enregistrement :</span>
+                            <span class="fee-label">Droits d'Enregistrement <span id="fee-reg-rate-label" class="fee-rate-hint"></span> :</span>
                             <strong id="fee-registration" class="fee-value">0 €</strong>
                         </div>
                         <div class="fee-row">
@@ -165,6 +215,10 @@
                         <div class="fee-row">
                             <span class="fee-label">Frais de Dossier Argenta :</span>
                             <strong id="fee-dossier" class="fee-value">350 €</strong>
+                        </div>
+                        <div class="fee-row recurrent-row">
+                            <span class="fee-label">Précompte Immobilier (Est. Annuel) :</span>
+                            <strong id="fee-precompte" class="fee-value text-recurrent">0 € / an</strong>
                         </div>
                         <div class="fee-divider"></div>
                         <div class="fee-row highlight-row">
@@ -232,6 +286,51 @@
                             <span id="total-paid-val" class="metric-value">0 €</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Debt Ratio Widget -->
+                <div class="debt-ratio-card" id="debt-ratio-card">
+                    <div class="debt-ratio-header">
+                        <div class="debt-ratio-title-group">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <span class="debt-ratio-title">Taux d'Endettement (DSTI)</span>
+                        </div>
+                        <div class="debt-ratio-badge" id="debt-ratio-badge">–</div>
+                    </div>
+
+                    <div class="debt-ratio-body">
+                        <div class="debt-ratio-numbers">
+                            <div class="debt-ratio-pct-wrap">
+                                <span class="debt-ratio-pct" id="debt-ratio-pct">–</span>
+                                <span class="debt-ratio-pct-label">du revenu net</span>
+                            </div>
+                            <div class="debt-ratio-detail">
+                                <span id="debt-ratio-detail">Mensualité : – € / Revenu : – €</span>
+                            </div>
+                        </div>
+
+                        <!-- Segmented gauge bar -->
+                        <div class="debt-gauge-wrap">
+                            <div class="debt-gauge-track">
+                                <div class="debt-gauge-fill" id="debt-gauge-fill"></div>
+                                <div class="debt-gauge-marker" style="left: 33%">
+                                    <div class="debt-gauge-marker-line"></div>
+                                    <span class="debt-gauge-marker-label">33%</span>
+                                </div>
+                                <div class="debt-gauge-marker" style="left: 40%">
+                                    <div class="debt-gauge-marker-line"></div>
+                                    <span class="debt-gauge-marker-label">40%</span>
+                                </div>
+                            </div>
+                            <div class="debt-gauge-zones">
+                                <span class="dz-ok">✓ OK (&lt;33%)</span>
+                                <span class="dz-watch">⚠ Vigilance</span>
+                                <span class="dz-danger">✕ Risque (&gt;40%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="debt-ratio-advice" id="debt-ratio-advice">Saisissez votre revenu net mensuel pour évaluer votre capacité d'emprunt.</p>
                 </div>
             </section>
 
@@ -370,6 +469,20 @@
                         <div class="range-labels">
                             <span>0 €</span>
                             <span>1 000 €</span>
+                        </div>
+                    </div>
+
+                    <!-- Précompte Immobilier (Calculated) -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="precompte-input">Précompte Immobilier (Est. Mensuel)</label>
+                            <div class="input-wrapper">
+                                <input type="text" id="precompte-input" readonly class="readonly-input">
+                                <span class="input-unit">€/mois</span>
+                            </div>
+                        </div>
+                        <div class="range-labels">
+                            <span>Basé sur le Revenu Cadastral et la région</span>
                         </div>
                     </div>
 
@@ -528,6 +641,132 @@
                 </div>
             </section>
         </footer>
+        </div> <!-- End #simulator-tab-content -->
+
+        <!-- Equivalence View Container -->
+        <div id="equivalence-tab-content" style="display: none;">
+            <div class="equivalence-grid">
+                <!-- Inputs and Config Column -->
+                <div class="card config-card">
+                    <h2>Sélection du Logement</h2>
+                    <p class="description text-sm">Sélectionnez une région et un type de logement pour comparer l'achat et la location équivalents. Vous pouvez éditer les prix pour affiner.</p>
+
+                    <!-- Region Selector -->
+                    <div class="input-group">
+                        <label for="eq-region-select">Province / Région</label>
+                        <div class="select-wrapper">
+                            <select id="eq-region-select" class="select-input">
+                                <option value="bruxelles" selected>Bruxelles-Capitale (D.E. 12.5%)</option>
+                                <option value="brabant-wallon">Brabant Wallon (D.E. 3%)</option>
+                                <option value="brabant-flamand">Brabant Flamand (D.E. 2%)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Property Profile Selector -->
+                    <div class="input-group">
+                        <label for="eq-profile-select">Profil du Bien</label>
+                        <div class="select-wrapper">
+                            <select id="eq-profile-select" class="select-input">
+                                <option value="studio">Studio / Petit Appartement (1 ch.)</option>
+                                <option value="appartement" selected>Appartement Standard (2 ch.)</option>
+                                <option value="maison">Maison Familiale (3 ch.)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Editable Purchase Price -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="eq-purchase-price">Prix d'Achat Estimé</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="eq-purchase-price" min="10000" max="3000000" step="5000" value="320000">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editable Monthly Rent -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="eq-rent">Loyer Mensuel Hors Charges</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="eq-rent" min="100" max="15000" step="50" value="1450">
+                                <span class="input-unit">€</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis and Comparison Column -->
+                <div class="equivalence-results">
+                    <!-- Ratio Analysis Card -->
+                    <div class="card ratio-card">
+                        <h3>Indicateur Prix / Loyer (Price-to-Rent Ratio)</h3>
+                        <div class="ratio-gauge-container">
+                            <div class="ratio-value-display">
+                                <span id="eq-ratio-val" class="ratio-large-number">18.4</span>
+                                <span id="eq-ratio-badge" class="ratio-badge badge-neutral">Équilbré</span>
+                            </div>
+                            <div class="ratio-gauge-bar">
+                                <div id="eq-gauge-fill" class="ratio-gauge-fill" style="width: 50%;"></div>
+                            </div>
+                            <div class="ratio-gauge-labels">
+                                <span>Achat (< 15)</span>
+                                <span>Neutre (15-20)</span>
+                                <span>Location (> 20)</span>
+                            </div>
+                        </div>
+                        <p class="ratio-explanation" id="eq-ratio-advice">
+                            Le ratio prix/loyer indique qu'acheter ou louer cet appartement est financièrement équilibré.
+                        </p>
+                    </div>
+
+                    <!-- Side by Side Outflow Cards -->
+                    <div class="equivalence-comparison-grid">
+                        <!-- Buying Card -->
+                        <div class="card eq-outflow-card buy-card">
+                            <div class="eq-card-header">
+                                <span class="eq-dot buy-dot"></span>
+                                <h4>Coût de l'Achat</h4>
+                            </div>
+                            <div class="eq-card-body">
+                                <div class="eq-main-metric">
+                                    <span id="eq-buy-monthly" class="eq-value">0 €</span>
+                                    <span class="eq-unit">/ mois est.</span>
+                                </div>
+                                <ul class="eq-cost-list">
+                                    <li><span>Mensualité du crédit (80% quotité) :</span> <strong id="eq-buy-loan">0 €</strong></li>
+                                    <li><span>Frais de transaction initiaux :</span> <strong id="eq-buy-fees">0 €</strong></li>
+                                    <li><span>Charges mensuelles estimées :</span> <strong>200 €</strong></li>
+                                    <li><span>Précompte immobilier mensuel :</span> <strong id="eq-buy-tax">0 €</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Renting Card -->
+                        <div class="card eq-outflow-card rent-card">
+                            <div class="eq-card-header">
+                                <span class="eq-dot rent-dot"></span>
+                                <h4>Coût de la Location</h4>
+                            </div>
+                            <div class="eq-card-body">
+                                <div class="eq-main-metric">
+                                    <span id="eq-rent-monthly" class="eq-value">1 450 €</span>
+                                    <span class="eq-unit">/ mois</span>
+                                </div>
+                                <ul class="eq-cost-list">
+                                    <li><span>Loyer de base :</span> <strong id="eq-rent-base">1 450 €</strong></li>
+                                    <li><span>Charges locataire estimées :</span> <strong>50 €</strong></li>
+                                    <li><span>Précompte immobilier :</span> <strong class="text-green">0 € (non applicable)</strong></li>
+                                    <li><span>Frais d'acquisition initiaux :</span> <strong class="text-green">0 € (non applicable)</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script src="app.js"></script>

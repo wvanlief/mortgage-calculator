@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPurchasePrice = 450000;
     let currentRenovations = 50000;
     let currentFondsPropres = 130000;
+    let currentRC = 1000;
     let currentCapital = 397858; // Calculated dynamically
     let currentRate = 3.41; // TAEG in %
     let currentDuration = 25; // in years
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentNotaryRate = 7.5; // Frais d'acquisition in % (customizable in advanced)
     let currentAppreciation = 1.5;
     let currentRentInflation = 1.5;
+    let currentMonthlyIncome = 4500; // Revenu net mensuel du foyer
 
     // Cache points for resize rendering
     let lastBuyVsRentPoints = [];
@@ -36,14 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const purchasePriceSlider = document.getElementById('purchase-price-slider');
     const renovationsInput = document.getElementById('renovations-input');
     const renovationsSlider = document.getElementById('renovations-slider');
+    const rcInput = document.getElementById('rc-input');
+    const rcSlider = document.getElementById('rc-slider');
     const fondsPropresInput = document.getElementById('fonds-propres-input');
     const fondsPropresSlider = document.getElementById('fonds-propres-slider');
     
     // Estimated Fees DOM elements
     const feeRegistration = document.getElementById('fee-registration');
+    const feeRegRateLabel = document.getElementById('fee-reg-rate-label');
     const feeNotary = document.getElementById('fee-notary');
     const feeMortgage = document.getElementById('fee-mortgage');
     const feeDossier = document.getElementById('fee-dossier');
+    const feePrecompte = document.getElementById('fee-precompte');
     const totalProjectCostEl = document.getElementById('total-project-cost');
     const calculatedCapitalEl = document.getElementById('calculated-capital');
 
@@ -92,6 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const appreciationInput = document.getElementById('appreciation-input');
     const rentInflationInput = document.getElementById('rent-inflation-input');
     const notaryInput = document.getElementById('notary-input');
+    const precompteInput = document.getElementById('precompte-input');
+
+    // Income & Debt Ratio DOM elements
+    const incomeInput = document.getElementById('income-input');
+    const incomeSlider = document.getElementById('income-slider');
+    const debtRatioCard = document.getElementById('debt-ratio-card');
+    const debtRatioBadge = document.getElementById('debt-ratio-badge');
+    const debtRatioPct = document.getElementById('debt-ratio-pct');
+    const debtRatioDetail = document.getElementById('debt-ratio-detail');
+    const debtGaugeFill = document.getElementById('debt-gauge-fill');
+    const debtRatioAdvice = document.getElementById('debt-ratio-advice');
 
     const buyRentBanner = document.getElementById('buy-rent-banner');
     const buyRentWinnerTitle = document.getElementById('buy-rent-winner-title');
@@ -209,9 +226,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const notaryFeeInclVat = baseFees * 1.21;
         
         // Fixed administrative debours based on region
-        const debours = currentRegion === 'wallonie' ? 2534.65 : 2533.54;
+        const debours = (currentRegion === 'wallonie') ? 2534.65 : (currentRegion === 'flandre') ? 2533.54 : 2534.65; // Brussels similar to Wallonie
         
         return regDuty + insDuty + notaryFeeInclVat + debours;
+    }
+
+    /**
+     * Calculates the estimated Belgian property tax (Précompte Immobilier)
+     */
+    function calculatePrecompteImmobilier(rc, region) {
+        if (rc <= 0) return 0;
+        const indexationCoeff = 2.1763; // 2026 indexation coefficient
+        // Wallonia average total rate ~ 33.75%, Flanders average total rate ~ 39.70%
+        // Brussels average total rate ~ 27.00% (lower centimes additionnels communaux)
+        let averageTotalRate;
+        if (region === 'wallonie') averageTotalRate = 0.3375;
+        else if (region === 'flandre') averageTotalRate = 0.3970;
+        else averageTotalRate = 0.2700; // bruxelles
+        return rc * indexationCoeff * averageTotalRate;
     }
 
     /**
@@ -569,9 +601,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Main Calculations Updates ---
     function updateSimulatorResults() {
-        // 1. Calculate Registration Duties based on region (Wallonia 3% vs Flanders 2% for primary residence with renovations)
-        const regRate = currentRegion === 'wallonie' ? 0.03 : 0.02;
-        const regDuties = currentPurchasePrice * regRate;
+        // 1. Calculate Registration Duties based on region
+        // Wallonia 3%, Flanders 2% for primary residence with renovations
+        // Brussels: 12.5% on full price, BUT abattement (tax-free slice) of 200,000 € for primary residence
+        let regDuties;
+        if (currentRegion === 'wallonie') {
+            regDuties = currentPurchasePrice * 0.03;
+        } else if (currentRegion === 'flandre') {
+            regDuties = currentPurchasePrice * 0.02;
+        } else {
+            // Brussels: 12.5% but with 200k€ abattement (exemption on first 200k€ slice for primary residence)
+            // If price <= 600,000€, the first 200k is exempt: (price - 200000) * 12.5%
+            // If price > 600,000€, no abattement: full 12.5%
+            if (currentPurchasePrice <= 600000) {
+                regDuties = Math.max(0, (currentPurchasePrice - 200000) * 0.125);
+            } else {
+                regDuties = currentPurchasePrice * 0.125;
+            }
+        }
 
         // 2. Calculate Notary Fees
         const notaryFees = calculateNotaryFees(currentPurchasePrice);
@@ -595,11 +642,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // 5. Total Project Cost
         const totalProjectCost = currentPurchasePrice + currentRenovations + regDuties + notaryFees + mortgageFee + dossierFee;
 
-        // 6. Update Estimated Fees UI Elements
+        // 6. Calculate Property Tax (recurrent)
+        const precompteImmobilier = calculatePrecompteImmobilier(currentRC, currentRegion);
+
+        // 7. Update Estimated Fees UI Elements
         feeRegistration.textContent = formatCurrency(regDuties, true);
+        // Update rate hint label
+        if (currentRegion === 'wallonie') feeRegRateLabel.textContent = '(3%)';
+        else if (currentRegion === 'flandre') feeRegRateLabel.textContent = '(2%)';
+        else feeRegRateLabel.textContent = '(12.5% – abattement 200k€)';
         feeNotary.textContent = formatCurrency(notaryFees, true);
         feeMortgage.textContent = formatCurrency(mortgageFee, true);
         feeDossier.textContent = formatCurrency(dossierFee, true);
+        feePrecompte.textContent = formatCurrency(precompteImmobilier) + " / an";
         totalProjectCostEl.textContent = formatCurrency(totalProjectCost, true);
         calculatedCapitalEl.textContent = formatCurrency(currentCapital);
 
@@ -628,8 +683,57 @@ document.addEventListener('DOMContentLoaded', () => {
         renderComparisonGrid();
         renderAmortizationTable();
 
+        // Update Debt Ratio widget
+        updateDebtRatio(monthlyPayment);
+
         // Update Buy vs Rent Comparative
         updateBuyVsRentResults();
+    }
+
+    // --- Debt Ratio Calculation ---
+    function updateDebtRatio(monthlyPayment) {
+        if (currentMonthlyIncome <= 0) return;
+
+        // Total monthly owner obligation: loan payment + owner charges + monthly precompte
+        const precompte = calculatePrecompteImmobilier(currentRC, currentRegion);
+        const monthlyPI = precompte / 12;
+        const totalMonthlyBurden = monthlyPayment + currentOwnerCharges + monthlyPI;
+
+        const ratio = (totalMonthlyBurden / currentMonthlyIncome) * 100;
+        const ratioCapped = Math.min(ratio, 80); // Cap gauge at 80% for display
+
+        // Update percentage display
+        debtRatioPct.textContent = ratio.toFixed(1) + '%';
+        debtRatioDetail.textContent =
+            `Mensualité tout compris : ${formatCurrency(totalMonthlyBurden)} / Revenu : ${formatCurrency(currentMonthlyIncome)}`;
+
+        // Move gauge fill — scale 0–80% ratio to 0–100% bar width
+        debtGaugeFill.style.width = ((ratioCapped / 80) * 100).toFixed(1) + '%';
+
+        // Determine state
+        debtRatioCard.classList.remove('state-ok', 'state-watch', 'state-danger');
+
+        if (ratio < 33) {
+            debtRatioCard.classList.add('state-ok');
+            debtRatioBadge.textContent = '✓ Acceptable';
+            debtRatioAdvice.textContent =
+                `Votre taux d'endettement de ${ratio.toFixed(1)}% est dans la zone acceptable pour la majorité des banques belges (seuil recommandé : 33%). ` +
+                `Il vous reste ${formatCurrency(currentMonthlyIncome - totalMonthlyBurden)} € de capacité résiduelle par mois.`;
+        } else if (ratio <= 40) {
+            debtRatioCard.classList.add('state-watch');
+            debtRatioBadge.textContent = '⚠ Zone de vigilance';
+            debtRatioAdvice.textContent =
+                `Votre taux d'endettement de ${ratio.toFixed(1)}% dépasse le seuil classique de 33% mais reste sous la limite haute de 40% (DSTI belge). ` +
+                `Certaines banques acceptent cette plage selon votre profil, mais la marge de manœuvre budgétaire est réduite.`;
+        } else {
+            debtRatioCard.classList.add('state-danger');
+            debtRatioBadge.textContent = '✕ Dépasse la norme';
+            const excess = totalMonthlyBurden - currentMonthlyIncome * 0.40;
+            debtRatioAdvice.textContent =
+                `Votre taux d'endettement de ${ratio.toFixed(1)}% dépasse la limite bancaire standard de 40%. ` +
+                `Pour revenir dans la norme, il faudrait réduire la mensualité de ${formatCurrency(excess)} € ` +
+                `(en allongeant la durée, augmentant l'apport, ou augmentant le revenu du foyer).`;
+        }
     }
 
     // --- Buy vs Rent Calculations & UI Updates ---
@@ -641,8 +745,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthlySavingsRate = Math.pow(1 + currentSavingsRate / 100, 1 / 12) - 1;
         
         // Calculate exact total transaction fees (lost money for buyer at day 1)
-        const regRate = currentRegion === 'wallonie' ? 0.03 : 0.02;
-        const regDuties = currentPurchasePrice * regRate;
+        let regDuties;
+        if (currentRegion === 'wallonie') {
+            regDuties = currentPurchasePrice * 0.03;
+        } else if (currentRegion === 'flandre') {
+            regDuties = currentPurchasePrice * 0.02;
+        } else {
+            // Brussels with abattement
+            if (currentPurchasePrice <= 600000) {
+                regDuties = Math.max(0, (currentPurchasePrice - 200000) * 0.125);
+            } else {
+                regDuties = currentPurchasePrice * 0.125;
+            }
+        }
         const notaryFeesVal = calculateNotaryFees(currentPurchasePrice);
         const mortgageFeeVal = calculateMortgageFee(currentCapital);
         const totalFees = regDuties + notaryFeesVal + mortgageFeeVal + 350;
@@ -651,6 +766,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalProjectBase = currentPurchasePrice + currentRenovations;
         const feesPercentage = totalProjectBase > 0 ? (totalFees / totalProjectBase) * 100 : 0;
         notaryInput.value = feesPercentage.toFixed(2);
+        
+        // Calculate estimated monthly precompte immobilier
+        const precompteImmobilier = calculatePrecompteImmobilier(currentRC, currentRegion);
+        const monthlyPI = precompteImmobilier / 12;
+        precompteInput.value = Math.round(monthlyPI);
         
         // Renter starts with total own funds (which covers down payment + fees for buyer)
         let renterPortfolio = currentFondsPropres; 
@@ -676,8 +796,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             totalRentPaid += currentRentAmount;
             
-            // Buyer monthly outflow
-            const buyCost = monthlyPayment + currentOwnerCharges;
+            // Buyer monthly outflow (payment + owner charges + monthly precompte tax)
+            const buyCost = monthlyPayment + currentOwnerCharges + monthlyPI;
             
             // Difference in monthly budgets
             const diff = buyCost - currentRentAmount;
@@ -726,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renterSpentPart.textContent = `Loyers payés : ${formatCurrency(totalRentPaid)}`;
  
         // Update Transparency Breakdown Panel
-        const initialBuyCost = monthlyPayment + currentOwnerCharges;
+        const initialBuyCost = monthlyPayment + currentOwnerCharges + monthlyPI;
         buyerMonthlyCostLabel.textContent = formatCurrency(initialBuyCost);
         renterMonthlyCostLabel.textContent = formatCurrency(currentRent);
         notaryFeesTotalLabel.textContent = formatCurrency(totalFees);
@@ -749,7 +869,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buyRentWinnerTitle.textContent = "L'Achat est plus avantageux !";
             buyRentWinnerDiff.textContent = `+ ${formatCurrency(diffWealth)} de patrimoine net après ${currentDuration} ans`;
         } else {
-            buyRentBanner.className = "comparison-banner winner-renter";anner winner-renter";
+            buyRentBanner.className = "comparison-banner winner-renter";
             buyRentWinnerTitle.textContent = "La Location est plus avantageuse !";
             buyRentWinnerDiff.textContent = `+ ${formatCurrency(diffWealth)} de patrimoine net après ${currentDuration} ans`;
         }
@@ -947,6 +1067,24 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSimulatorResults();
     });
 
+    // Revenu Cadastral Events
+    rcSlider.addEventListener('input', (e) => {
+        currentRC = parseInt(e.target.value);
+        rcInput.value = currentRC;
+        updateSimulatorResults();
+    });
+
+    rcInput.addEventListener('change', (e) => {
+        let val = parseInt(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 10000) val = 10000;
+        currentRC = val;
+        rcInput.value = val;
+        if (val > rcSlider.max) rcSlider.max = Math.ceil(val/100)*100;
+        rcSlider.value = val;
+        updateSimulatorResults();
+    });
+
     // Fonds Propres Events
     fondsPropresSlider.addEventListener('input', (e) => {
         currentFondsPropres = parseInt(e.target.value);
@@ -979,6 +1117,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         apportSlider.value = val;
         
+        updateSimulatorResults();
+    });
+
+    // Income Event Listeners
+    incomeSlider.addEventListener('input', (e) => {
+        currentMonthlyIncome = parseInt(e.target.value);
+        incomeInput.value = currentMonthlyIncome;
+        updateSimulatorResults();
+    });
+
+    incomeInput.addEventListener('change', (e) => {
+        let val = parseInt(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 100000) val = 100000;
+        currentMonthlyIncome = val;
+        incomeInput.value = val;
+        if (val > incomeSlider.max) incomeSlider.max = Math.ceil(val / 1000) * 1000;
+        incomeSlider.value = val;
         updateSimulatorResults();
     });
 
@@ -1248,6 +1404,176 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- Housing Equivalence Comparison Logic ---
+    const equivalenceData = {
+        'bruxelles': {
+            'studio': { price: 190000, rent: 900, rc: 550 },
+            'appartement': { price: 320000, rent: 1450, rc: 850 },
+            'maison': { price: 540000, rent: 2300, rc: 1350 }
+        },
+        'brabant-wallon': {
+            'studio': { price: 160000, rent: 750, rc: 480 },
+            'appartement': { price: 260000, rent: 1100, rc: 750 },
+            'maison': { price: 410000, rent: 1650, rc: 1100 }
+        },
+        'brabant-flamand': {
+            'studio': { price: 170000, rent: 800, rc: 500 },
+            'appartement': { price: 270000, rent: 1150, rc: 780 },
+            'maison': { price: 430000, rent: 1750, rc: 1150 }
+        }
+    };
+
+    // DOM Elements for Equivalence View
+    const navBtnSimulator = document.getElementById('nav-btn-simulator');
+    const navBtnEquivalence = document.getElementById('nav-btn-equivalence');
+    const simulatorTabContent = document.getElementById('simulator-tab-content');
+    const equivalenceTabContent = document.getElementById('equivalence-tab-content');
+
+    const eqRegionSelect = document.getElementById('eq-region-select');
+    const eqProfileSelect = document.getElementById('eq-profile-select');
+    const eqPurchasePrice = document.getElementById('eq-purchase-price');
+    const eqRent = document.getElementById('eq-rent');
+
+    const eqRatioVal = document.getElementById('eq-ratio-val');
+    const eqRatioBadge = document.getElementById('eq-ratio-badge');
+    const eqGaugeFill = document.getElementById('eq-gauge-fill');
+    const eqRatioAdvice = document.getElementById('eq-ratio-advice');
+
+    const eqBuyMonthly = document.getElementById('eq-buy-monthly');
+    const eqBuyLoan = document.getElementById('eq-buy-loan');
+    const eqBuyFees = document.getElementById('eq-buy-fees');
+    const eqBuyTax = document.getElementById('eq-buy-tax');
+
+    const eqRentMonthly = document.getElementById('eq-rent-monthly');
+    const eqRentBase = document.getElementById('eq-rent-base');
+
+    // Tab toggling
+    navBtnSimulator.addEventListener('click', () => {
+        navBtnSimulator.classList.add('active');
+        navBtnEquivalence.classList.remove('active');
+        simulatorTabContent.style.display = 'block';
+        equivalenceTabContent.style.display = 'none';
+        window.dispatchEvent(new Event('resize'));
+    });
+
+    navBtnEquivalence.addEventListener('click', () => {
+        navBtnEquivalence.classList.add('active');
+        navBtnSimulator.classList.remove('active');
+        simulatorTabContent.style.display = 'none';
+        equivalenceTabContent.style.display = 'block';
+        updateEquivalenceResults();
+    });
+
+    // Profile selector updates loading defaults
+    function loadEquivalenceProfile() {
+        const regionKey = eqRegionSelect.value;
+        const profileKey = eqProfileSelect.value;
+        const data = equivalenceData[regionKey][profileKey];
+        if (data) {
+            eqPurchasePrice.value = data.price;
+            eqRent.value = data.rent;
+        }
+        updateEquivalenceResults();
+    }
+
+    eqRegionSelect.addEventListener('change', loadEquivalenceProfile);
+    eqProfileSelect.addEventListener('change', loadEquivalenceProfile);
+    eqPurchasePrice.addEventListener('input', updateEquivalenceResults);
+    eqRent.addEventListener('input', updateEquivalenceResults);
+
+    function updateEquivalenceResults() {
+        const price = parseFloat(eqPurchasePrice.value) || 0;
+        const rent = parseFloat(eqRent.value) || 0;
+        const regionKey = eqRegionSelect.value;
+        const profileKey = eqProfileSelect.value;
+        
+        // 1. Calculate Price-to-Rent Ratio
+        let ratio = 0;
+        if (rent > 0) {
+            ratio = price / (rent * 12);
+        }
+        
+        eqRatioVal.textContent = ratio.toFixed(1);
+        
+        // Update advice and badge
+        if (ratio <= 0) {
+            eqRatioBadge.textContent = "N/A";
+            eqRatioBadge.className = "ratio-badge badge-neutral";
+            eqGaugeFill.style.width = "0%";
+            eqGaugeFill.style.backgroundColor = "var(--text-muted)";
+            eqRatioAdvice.textContent = "Veuillez entrer des valeurs valides.";
+        } else if (ratio < 15) {
+            eqRatioBadge.textContent = "Achat Favorable";
+            eqRatioBadge.className = "ratio-badge badge-buy";
+            const pct = Math.min(40, (ratio / 15) * 40);
+            eqGaugeFill.style.width = `${pct}%`;
+            eqGaugeFill.style.backgroundColor = "var(--accent-primary)";
+            eqRatioAdvice.textContent = `Un ratio de ${ratio.toFixed(1)} indique qu'il est très favorable d'acheter ce bien plutôt que de le louer (le prix d'achat équivaut à moins de 15 ans de loyers).`;
+        } else if (ratio <= 20) {
+            eqRatioBadge.textContent = "Équilibré";
+            eqRatioBadge.className = "ratio-badge badge-neutral";
+            const pct = 40 + ((ratio - 15) / 5) * 25;
+            eqGaugeFill.style.width = `${pct}%`;
+            eqGaugeFill.style.backgroundColor = "#fbbf24";
+            eqRatioAdvice.textContent = `Un ratio de ${ratio.toFixed(1)} indique que l'achat ou la location sont financièrement équilibrés. La décision dépendra de votre situation personnelle et de vos plans à long terme.`;
+        } else {
+            eqRatioBadge.textContent = "Location Favorable";
+            eqRatioBadge.className = "ratio-badge badge-rent";
+            const pct = Math.min(100, 65 + ((ratio - 20) / 10) * 35);
+            eqGaugeFill.style.width = `${pct}%`;
+            eqGaugeFill.style.backgroundColor = "var(--accent-secondary)";
+            eqRatioAdvice.textContent = `Un ratio de ${ratio.toFixed(1)} indique qu'il est préférable de louer ce bien (le prix d'achat équivaut à plus de 20 ans de loyers). Vous pourrez épargner et placer la différence financièrement.`;
+        }
+
+        // 2. Outflow Calculations
+        const totalRent = rent + 50; // Rent + 50 € renter charges
+        eqRentMonthly.textContent = formatCurrency(totalRent);
+        eqRentBase.textContent = formatCurrency(rent);
+
+        // Buy Outflow: assume 80% LTV (20% own funds)
+        const loanCapital = price * 0.8;
+        const rate = 3.41;
+        const duration = 25;
+        const monthlyPayment = calculateMonthlyPayment(loanCapital, rate, duration);
+
+        // Calculate transaction fees
+        let regDutiesRate = 0.125;
+        let regionText = 'wallonie'; 
+        if (regionKey === 'brabant-wallon') {
+            regDutiesRate = 0.03;
+            regionText = 'wallonie';
+        } else if (regionKey === 'brabant-flamand') {
+            regDutiesRate = 0.02;
+            regionText = 'flandre';
+        }
+        
+        let regDuties = price * regDutiesRate;
+        if (regionKey === 'bruxelles' && price <= 600000) {
+            regDuties = Math.max(0, (price - 200000) * 0.125);
+        }
+
+        const notaryFees = calculateNotaryFees(price);
+        
+        const savedRegion = currentRegion;
+        currentRegion = regionText;
+        const mortgageFee = calculateMortgageFee(loanCapital);
+        currentRegion = savedRegion;
+
+        const totalFees = regDuties + notaryFees + mortgageFee + 350;
+
+        const profileData = equivalenceData[regionKey][profileKey];
+        const estimatedRC = profileData ? profileData.rc : 1000;
+        const precompteImmobilier = calculatePrecompteImmobilier(estimatedRC, regionText);
+        const monthlyPI = precompteImmobilier / 12;
+
+        const totalBuyOutflow = monthlyPayment + 200 + monthlyPI;
+
+        eqBuyMonthly.textContent = formatCurrency(totalBuyOutflow);
+        eqBuyLoan.textContent = formatCurrency(monthlyPayment);
+        eqBuyFees.textContent = formatCurrency(totalFees);
+        eqBuyTax.textContent = formatCurrency(monthlyPI) + " / mois est.";
+    }
+
     // --- Initialization ---
     // Make sure values match UI inputs initially
     regionSelect.value = currentRegion;
@@ -1255,6 +1581,8 @@ document.addEventListener('DOMContentLoaded', () => {
     purchasePriceSlider.value = currentPurchasePrice;
     renovationsInput.value = currentRenovations;
     renovationsSlider.value = currentRenovations;
+    rcInput.value = currentRC;
+    rcSlider.value = currentRC;
     fondsPropresInput.value = currentFondsPropres;
     fondsPropresSlider.value = currentFondsPropres;
 
@@ -1274,6 +1602,9 @@ document.addEventListener('DOMContentLoaded', () => {
     appreciationInput.value = currentAppreciation.toFixed(1);
     rentInflationInput.value = currentRentInflation.toFixed(1);
     
+    incomeInput.value = currentMonthlyIncome;
+    incomeSlider.value = currentMonthlyIncome;
+
     // Set theme based on system preference (default is dark in CSS, check if light preferred)
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
         document.documentElement.setAttribute('data-theme', 'light');
