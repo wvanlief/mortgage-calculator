@@ -84,11 +84,11 @@
                         <div class="input-header">
                             <label for="purchase-price-input">Prix d'Achat du Bien</label>
                             <div class="input-wrapper">
-                                <input type="number" id="purchase-price-input" min="10000" max="2000000" step="5000" value="450000">
+                                <input type="text" id="purchase-price-input" value="400 000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
-                        <input type="range" id="purchase-price-slider" min="10000" max="1000000" step="5000" value="450000" class="range-slider">
+                        <input type="range" id="purchase-price-slider" min="10000" max="1000000" step="5000" value="400000" class="range-slider">
                         <div class="range-labels">
                             <span>10k €</span>
                             <span>1M €</span>
@@ -100,7 +100,7 @@
                         <div class="input-header">
                             <label for="renovations-input">Travaux / Rénovations</label>
                             <div class="input-wrapper">
-                                <input type="number" id="renovations-input" min="0" max="1000000" step="1000" value="50000">
+                                <input type="text" id="renovations-input" value="50 000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
@@ -116,7 +116,7 @@
                         <div class="input-header">
                             <label for="rc-input">Revenu Cadastral (RC)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="rc-input" min="0" max="10000" step="50" value="1000">
+                                <input type="text" id="rc-input" value="1 000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
@@ -132,11 +132,11 @@
                         <div class="input-header">
                             <label for="fonds-propres-input">Fonds Propres (Apport)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="fonds-propres-input" min="0" max="2000000" step="5000" value="130000">
+                                <input type="text" id="fonds-propres-input" value="50 000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
-                        <input type="range" id="fonds-propres-slider" min="0" max="500000" step="5000" value="130000" class="range-slider">
+                        <input type="range" id="fonds-propres-slider" min="0" max="500000" step="5000" value="50000" class="range-slider">
                         <div class="range-labels">
                             <span>0 €</span>
                             <span>500k €</span>
@@ -148,11 +148,11 @@
                         <div class="input-header">
                             <label for="rate-input">Taux d'Intérêt (TAEG)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="rate-input" min="0.1" max="15" step="0.01" value="3.41">
+                                <input type="number" id="rate-input" min="0.1" max="15" step="0.01" value="4.00">
                                 <span class="input-unit">%</span>
                             </div>
                         </div>
-                        <input type="range" id="rate-slider" min="0.5" max="8.0" step="0.05" value="3.41" class="range-slider">
+                        <input type="range" id="rate-slider" min="0.5" max="8.0" step="0.05" value="4.00" class="range-slider">
                         <div class="range-labels">
                             <span>0.5 %</span>
                             <span>8.0 %</span>
@@ -184,7 +184,7 @@
                         <div class="input-header">
                             <label for="income-input">Revenu Net Mensuel du Foyer</label>
                             <div class="input-wrapper">
-                                <input type="number" id="income-input" min="500" max="50000" step="100" value="4500">
+                                <input type="text" id="income-input" value="4 500">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
@@ -412,11 +412,11 @@
                         <div class="input-header">
                             <label for="rent-input">Loyer Initial</label>
                             <div class="input-wrapper">
-                                <input type="number" id="rent-input" min="100" max="10000" step="50" value="1200">
+                                <input type="text" id="rent-input" value="1 000">
                                 <span class="input-unit">€/mois</span>
                             </div>
                         </div>
-                        <input type="range" id="rent-slider" min="300" max="4000" step="50" value="1200" class="range-slider">
+                        <input type="range" id="rent-slider" min="300" max="4000" step="50" value="1000" class="range-slider">
                         <div class="range-labels">
                             <span>300 €</span>
                             <span>4 000 €</span>
@@ -428,11 +428,11 @@
                         <div class="input-header">
                             <label for="apport-input">Apport Personnel (Investi par le locataire)</label>
                             <div class="input-wrapper">
-                                <input type="number" id="apport-input" min="0" max="1000000" step="5000" value="40000">
+                                <input type="text" id="apport-input" value="50 000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
-                        <input type="range" id="apport-slider" min="0" max="300000" step="2000" value="40000" class="range-slider">
+                        <input type="range" id="apport-slider" min="0" max="300000" step="2000" value="50000" class="range-slider">
                         <div class="range-labels">
                             <span>0 €</span>
                             <span>300k €</span>
@@ -461,7 +461,7 @@
                         <div class="input-header">
                             <label for="owner-charges-input">Charges Propriétaire Mensuelles</label>
                             <div class="input-wrapper">
-                                <input type="number" id="owner-charges-input" min="0" max="5000" step="20" value="200">
+                                <input type="text" id="owner-charges-input" value="200">
                                 <span class="input-unit">€/mois</span>
                             </div>
                         </div>
@@ -680,7 +680,7 @@
                         <div class="input-header">
                             <label for="eq-purchase-price">Prix d'Achat Estimé</label>
                             <div class="input-wrapper">
-                                <input type="number" id="eq-purchase-price" min="10000" max="3000000" step="5000" value="320000">
+                                <input type="text" id="eq-purchase-price" value="320 000">
                                 <span class="input-unit">€</span>
                             </div>
                         </div>
@@ -691,37 +691,32 @@
                         <div class="input-header">
                             <label for="eq-rent">Loyer Mensuel Hors Charges</label>
                             <div class="input-wrapper">
-                                <input type="number" id="eq-rent" min="100" max="15000" step="50" value="1450">
+                                <input type="text" id="eq-rent" value="1 450">
                                 <span class="input-unit">€</span>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Savings Rate for Equivalence -->
+                    <div class="input-group">
+                        <div class="input-header">
+                            <label for="eq-savings-rate-input">Rendement Annuel de l'Épargne</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="eq-savings-rate-input" min="0" max="15" step="0.1" value="3.0">
+                                <span class="input-unit">%</span>
+                            </div>
+                        </div>
+                        <input type="range" id="eq-savings-rate-slider" min="0" max="10" step="0.1" value="3.0" class="range-slider">
+                        <div class="quick-presets">
+                            <button type="button" class="preset-btn" data-eq-rate="1.0">1% (Livret A)</button>
+                            <button type="button" class="preset-btn active" data-eq-rate="3.0">3% (Sécurités)</button>
+                            <button type="button" class="preset-btn" data-eq-rate="5.0">5% (Actions)</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Analysis and Comparison Column -->
                 <div class="equivalence-results">
-                    <!-- Ratio Analysis Card -->
-                    <div class="card ratio-card">
-                        <h3>Indicateur Prix / Loyer (Price-to-Rent Ratio)</h3>
-                        <div class="ratio-gauge-container">
-                            <div class="ratio-value-display">
-                                <span id="eq-ratio-val" class="ratio-large-number">18.4</span>
-                                <span id="eq-ratio-badge" class="ratio-badge badge-neutral">Équilbré</span>
-                            </div>
-                            <div class="ratio-gauge-bar">
-                                <div id="eq-gauge-fill" class="ratio-gauge-fill" style="width: 50%;"></div>
-                            </div>
-                            <div class="ratio-gauge-labels">
-                                <span>Achat (< 15)</span>
-                                <span>Neutre (15-20)</span>
-                                <span>Location (> 20)</span>
-                            </div>
-                        </div>
-                        <p class="ratio-explanation" id="eq-ratio-advice">
-                            Le ratio prix/loyer indique qu'acheter ou louer cet appartement est financièrement équilibré.
-                        </p>
-                    </div>
-
                     <!-- Side by Side Outflow Cards -->
                     <div class="equivalence-comparison-grid">
                         <!-- Buying Card -->
@@ -761,6 +756,63 @@
                                     <li><span>Précompte immobilier :</span> <strong class="text-green">0 € (non applicable)</strong></li>
                                     <li><span>Frais d'acquisition initiaux :</span> <strong class="text-green">0 € (non applicable)</strong></li>
                                 </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projected Financial Comparison Card -->
+                    <div class="card eq-comparison-results-card" style="margin-top: 1.5rem;">
+                        <h2>Comparatif Financier Projeté (sur 25 ans)</h2>
+                        <p class="description" style="margin-bottom: 1.25rem;">
+                            Projection de la création de richesse nette en plaçant l'apport et la différence mensuelle de trésorerie à un rendement annuel de <span id="eq-savings-rate-lbl">3.0%</span>.
+                        </p>
+                        
+                        <!-- Winner Banner -->
+                        <div id="eq-buy-rent-banner" class="comparison-banner winner-buyer" style="margin-bottom: 1.5rem;">
+                            <span class="banner-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                            </span>
+                            <div class="banner-text">
+                                <span class="banner-title" id="eq-buy-rent-winner-title">L'Achat est plus avantageux !</span>
+                                <span class="banner-diff" id="eq-buy-rent-winner-diff">+ 0 € de patrimoine après 25 ans</span>
+                            </div>
+                        </div>
+
+                        <!-- Wealth Stats Cards -->
+                        <div class="wealth-cards-container" style="margin-bottom: 1.5rem;">
+                            <div class="wealth-card buyer-wealth-card">
+                                <div class="w-card-header">
+                                    <span class="w-card-dot buyer-dot"></span>
+                                    <span class="w-card-title">Patrimoine de l'Acheteur</span>
+                                </div>
+                                <div class="w-card-body">
+                                    <span id="eq-buyer-final-wealth" class="w-card-val">0 €</span>
+                                    <span class="w-card-sub" id="eq-buyer-property-part">Valeur bien : 0 €</span>
+                                    <span class="w-card-sub" id="eq-buyer-savings-part">Portefeuille : 0 €</span>
+                                </div>
+                            </div>
+
+                            <div class="wealth-card renter-wealth-card">
+                                <div class="w-card-header">
+                                    <span class="w-card-dot renter-dot"></span>
+                                    <span class="w-card-title">Patrimoine du Locataire</span>
+                                </div>
+                                <div class="w-card-body">
+                                    <span id="eq-renter-final-wealth" class="w-card-val">0 €</span>
+                                    <span class="w-card-sub" id="eq-renter-portfolio-part">Portefeuille : 0 €</span>
+                                    <span class="w-card-sub" id="eq-renter-spent-part">Loyers payés : 0 €</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wealth Graph -->
+                        <div class="buy-rent-chart-wrapper">
+                            <div class="chart-title-area">
+                                <h4>Évolution de la Valeur Nette du Patrimoine</h4>
+                                <span id="eq-breakeven-label" class="breakeven-badge">Seuil de rentabilité : -</span>
+                            </div>
+                            <div id="eq-buy-rent-chart-svg-container" class="svg-chart-wrapper buy-rent-chart">
+                                <!-- SVG comparison line chart injected here -->
                             </div>
                         </div>
                     </div>

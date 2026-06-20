@@ -7,19 +7,19 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- State Variables ---
     let currentRegion = 'wallonie';
-    let currentPurchasePrice = 450000;
+    let currentPurchasePrice = 400000;
     let currentRenovations = 50000;
-    let currentFondsPropres = 130000;
+    let currentFondsPropres = 50000;
     let currentRC = 1000;
-    let currentCapital = 397858; // Calculated dynamically
-    let currentRate = 3.41; // TAEG in %
+    let currentCapital = 422000; // Will be calculated dynamically at init
+    let currentRate = 4.0; // TAEG in %
     let currentDuration = 25; // in years
     let amortizationView = 'annual'; // 'annual' or 'monthly'
     let activeTab = 'donut-tab';
 
     // --- Buy vs Rent State Variables ---
-    let currentRent = 1200;
-    let currentApport = 130000; // Synchronized with currentFondsPropres
+    let currentRent = 1000;
+    let currentApport = 50000; // Synchronized with currentFondsPropres
     let currentSavingsRate = 3.0;
     let currentOwnerCharges = 200;
     let currentNotaryRate = 7.5; // Frais d'acquisition in % (customizable in advanced)
@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Cache points for resize rendering
     let lastBuyVsRentPoints = [];
     let lastBreakevenMonth = -1;
+
+    // Cache points for Equivalence tab resize rendering
+    let lastEqBuyVsRentPoints = [];
+    let lastEqBreakevenMonth = -1;
 
     // --- DOM Elements ---
     // Inputs & Sliders
@@ -147,6 +151,17 @@ document.addEventListener('DOMContentLoaded', () => {
             minimumFractionDigits: 1,
             maximumFractionDigits: 1
         }).format(val / 100);
+    };
+
+    const formatNumberWithSpaces = (val) => {
+        if (val === null || val === undefined || isNaN(val)) return '';
+        return new Intl.NumberFormat('fr-FR').format(val);
+    };
+
+    const parseFormattedNumber = (str) => {
+        if (str === null || str === undefined) return 0;
+        if (typeof str !== 'string') str = String(str);
+        return parseInt(str.replace(/[\s\u00A0]/g, ''), 10) || 0;
     };
 
     // --- Financial Calculations ---
@@ -1002,6 +1017,104 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    /**
+     * Renders SVG Equivalence Buy vs Rent wealth accumulation lines
+     */
+    function renderEqBuyVsRentChart(points, breakevenMonth) {
+        if (!eqBuyRentChartContainer) return;
+        const width = 600;
+        const height = 220;
+        const padding = { top: 15, right: 20, bottom: 35, left: 65 };
+        
+        const chartWidth = width - padding.left - padding.right;
+        const chartHeight = height - padding.top - padding.bottom;
+        
+        const totalMonths = points.length - 1;
+        
+        // Find max wealth for scaling Y
+        const maxWealth = Math.max(...points.map(p => Math.max(p.buyerWealth, p.renterWealth)), 1000) * 1.05;
+        
+        const getXPixel = (normalizedX) => padding.left + (normalizedX * chartWidth);
+        const getYPixel = (value) => padding.top + chartHeight - ((value / maxWealth) * chartHeight);
+        
+        let svgElements = `
+            <defs>
+                <linearGradient id="eq-buyer-wealth-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="var(--accent-primary)" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="var(--accent-primary)" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="eq-renter-wealth-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+        `;
+        
+        // Y grid lines
+        const gridTicks = 4;
+        for (let i = 0; i <= gridTicks; i++) {
+            const val = (maxWealth / gridTicks) * i;
+            const y = getYPixel(val);
+            svgElements += `
+                <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" class="chart-grid-line" />
+                <text x="${padding.left - 10}" y="${y + 4}" class="chart-axis-text" text-anchor="end">${Math.round(val/1000)}k €</text>
+            `;
+        }
+        
+        // X grid lines (Years - Equivalence is fixed at 25 years)
+        const yearsCount = 5;
+        const yearStep = 5;
+        for (let year = 0; year <= 25; year += yearStep) {
+            const normX = year / 25;
+            const x = getXPixel(normX);
+            svgElements += `
+                <line x1="${x}" y1="${padding.top}" x2="${x}" y2="${height - padding.bottom}" class="chart-grid-line" />
+                <text x="${x}" y="${height - padding.bottom + 18}" class="chart-axis-text" text-anchor="middle">${year} ans</text>
+            `;
+        }
+        
+        // Draw Curves
+        const sampleRate = Math.max(1, Math.floor(points.length / 40));
+        let buyerPathD = `M ${getXPixel(0)} ${getYPixel(points[0].buyerWealth)}`;
+        let renterPathD = `M ${getXPixel(0)} ${getYPixel(points[0].renterWealth)}`;
+        
+        for (let m = sampleRate; m <= totalMonths; m += sampleRate) {
+            buyerPathD += ` L ${getXPixel(m/totalMonths)} ${getYPixel(points[m].buyerWealth)}`;
+            renterPathD += ` L ${getXPixel(m/totalMonths)} ${getYPixel(points[m].renterWealth)}`;
+        }
+        
+        buyerPathD += ` L ${getXPixel(1)} ${getYPixel(points[totalMonths].buyerWealth)}`;
+        renterPathD += ` L ${getXPixel(1)} ${getYPixel(points[totalMonths].renterWealth)}`;
+        
+        const buyerAreaD = `${buyerPathD} L ${getXPixel(1)} ${getYPixel(0)} L ${getXPixel(0)} ${getYPixel(0)} Z`;
+        const renterAreaD = `${renterPathD} L ${getXPixel(1)} ${getYPixel(0)} L ${getXPixel(0)} ${getYPixel(0)} Z`;
+        
+        svgElements += `
+            <path d="${buyerAreaD}" fill="url(#eq-buyer-wealth-grad)" opacity="0.15" />
+            <path d="${renterAreaD}" fill="url(#eq-renter-wealth-grad)" opacity="0.15" />
+            
+            <path d="${buyerPathD}" class="chart-line-buyer" />
+            <path d="${renterPathD}" class="chart-line-renter" />
+        `;
+        
+        if (breakevenMonth !== -1 && breakevenMonth < points.length) {
+            const bp = points[breakevenMonth];
+            const x = getXPixel(breakevenMonth / totalMonths);
+            const y = getYPixel(bp.buyerWealth);
+            
+            svgElements += `
+                <line x1="${x}" y1="${y}" x2="${x}" y2="${height - padding.bottom}" stroke="var(--accent-secondary)" stroke-width="1.5" stroke-dasharray="3,3" />
+                <circle cx="${x}" cy="${y}" class="chart-intersection-point" />
+            `;
+        }
+        
+        eqBuyRentChartContainer.innerHTML = `
+            <svg width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+                ${svgElements}
+            </svg>
+        `;
+    }
+
     function checkPresetHighlight(rate) {
         document.querySelectorAll('.preset-btn').forEach(btn => {
             const val = parseFloat(btn.getAttribute('data-val'));
@@ -1030,16 +1143,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Purchase Price Events
     purchasePriceSlider.addEventListener('input', (e) => {
         currentPurchasePrice = parseInt(e.target.value);
-        purchasePriceInput.value = currentPurchasePrice;
+        purchasePriceInput.value = formatNumberWithSpaces(currentPurchasePrice);
         updateSimulatorResults();
     });
 
+    purchasePriceInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 2000000) val = 2000000;
+            currentPurchasePrice = val;
+            purchasePriceSlider.value = val;
+            updateSimulatorResults();
+        }
+    });
+
     purchasePriceInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 10000) val = 10000;
         if (val > 2000000) val = 2000000;
         currentPurchasePrice = val;
-        purchasePriceInput.value = val;
+        purchasePriceInput.value = formatNumberWithSpaces(val);
         if (val > purchasePriceSlider.max) {
             purchasePriceSlider.max = Math.ceil(val / 100000) * 100000;
         }
@@ -1050,16 +1173,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Renovations Events
     renovationsSlider.addEventListener('input', (e) => {
         currentRenovations = parseInt(e.target.value);
-        renovationsInput.value = currentRenovations;
+        renovationsInput.value = formatNumberWithSpaces(currentRenovations);
         updateSimulatorResults();
     });
 
+    renovationsInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 1000000) val = 1000000;
+            currentRenovations = val;
+            renovationsSlider.value = val;
+            updateSimulatorResults();
+        }
+    });
+
     renovationsInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 0) val = 0;
         if (val > 1000000) val = 1000000;
         currentRenovations = val;
-        renovationsInput.value = val;
+        renovationsInput.value = formatNumberWithSpaces(val);
         if (val > renovationsSlider.max) {
             renovationsSlider.max = Math.ceil(val / 50000) * 50000;
         }
@@ -1070,16 +1203,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Revenu Cadastral Events
     rcSlider.addEventListener('input', (e) => {
         currentRC = parseInt(e.target.value);
-        rcInput.value = currentRC;
+        rcInput.value = formatNumberWithSpaces(currentRC);
         updateSimulatorResults();
     });
 
+    rcInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 10000) val = 10000;
+            currentRC = val;
+            rcSlider.value = val;
+            updateSimulatorResults();
+        }
+    });
+
     rcInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 0) val = 0;
         if (val > 10000) val = 10000;
         currentRC = val;
-        rcInput.value = val;
+        rcInput.value = formatNumberWithSpaces(val);
         if (val > rcSlider.max) rcSlider.max = Math.ceil(val/100)*100;
         rcSlider.value = val;
         updateSimulatorResults();
@@ -1088,22 +1231,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fonds Propres Events
     fondsPropresSlider.addEventListener('input', (e) => {
         currentFondsPropres = parseInt(e.target.value);
-        fondsPropresInput.value = currentFondsPropres;
+        fondsPropresInput.value = formatNumberWithSpaces(currentFondsPropres);
         
         // Sync to Buy vs Rent
         currentApport = currentFondsPropres;
-        apportInput.value = currentApport;
+        apportInput.value = formatNumberWithSpaces(currentApport);
         apportSlider.value = currentApport;
         
         updateSimulatorResults();
     });
 
+    fondsPropresInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 2000000) val = 2000000;
+            currentFondsPropres = val;
+            fondsPropresSlider.value = val;
+            
+            // Sync to Buy vs Rent
+            currentApport = val;
+            apportInput.value = formatNumberWithSpaces(val);
+            apportSlider.value = val;
+            
+            updateSimulatorResults();
+        }
+    });
+
     fondsPropresInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 0) val = 0;
         if (val > 2000000) val = 2000000;
         currentFondsPropres = val;
-        fondsPropresInput.value = val;
+        fondsPropresInput.value = formatNumberWithSpaces(val);
         if (val > fondsPropresSlider.max) {
             fondsPropresSlider.max = Math.ceil(val / 50000) * 50000;
         }
@@ -1111,7 +1270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Sync to Buy vs Rent
         currentApport = val;
-        apportInput.value = val;
+        apportInput.value = formatNumberWithSpaces(val);
         if (val > apportSlider.max) {
             apportSlider.max = Math.ceil(val / 50000) * 50000;
         }
@@ -1123,16 +1282,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Income Event Listeners
     incomeSlider.addEventListener('input', (e) => {
         currentMonthlyIncome = parseInt(e.target.value);
-        incomeInput.value = currentMonthlyIncome;
+        incomeInput.value = formatNumberWithSpaces(currentMonthlyIncome);
         updateSimulatorResults();
     });
 
+    incomeInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 100000) val = 100000;
+            currentMonthlyIncome = val;
+            incomeSlider.value = val;
+            updateSimulatorResults();
+        }
+    });
+
     incomeInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 0) val = 0;
         if (val > 100000) val = 100000;
         currentMonthlyIncome = val;
-        incomeInput.value = val;
+        incomeInput.value = formatNumberWithSpaces(val);
         if (val > incomeSlider.max) incomeSlider.max = Math.ceil(val / 1000) * 1000;
         incomeSlider.value = val;
         updateSimulatorResults();
@@ -1287,16 +1456,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rent Events
     rentSlider.addEventListener('input', (e) => {
         currentRent = parseInt(e.target.value);
-        rentInput.value = currentRent;
+        rentInput.value = formatNumberWithSpaces(currentRent);
         updateBuyVsRentResults();
     });
 
+    rentInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 10000) val = 10000;
+            currentRent = val;
+            rentSlider.value = val;
+            updateBuyVsRentResults();
+        }
+    });
+
     rentInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 100) val = 100;
         if (val > 10000) val = 10000;
         currentRent = val;
-        rentInput.value = val;
+        rentInput.value = formatNumberWithSpaces(val);
         if (val > rentSlider.max) rentSlider.max = val;
         rentSlider.value = val;
         updateBuyVsRentResults();
@@ -1305,28 +1484,44 @@ document.addEventListener('DOMContentLoaded', () => {
     // Apport Events
     apportSlider.addEventListener('input', (e) => {
         currentApport = parseInt(e.target.value);
-        apportInput.value = currentApport;
+        apportInput.value = formatNumberWithSpaces(currentApport);
         
         // Synchronize with main Fonds Propres
         currentFondsPropres = currentApport;
-        fondsPropresInput.value = currentFondsPropres;
+        fondsPropresInput.value = formatNumberWithSpaces(currentFondsPropres);
         fondsPropresSlider.value = currentFondsPropres;
         
         updateSimulatorResults();
     });
 
+    apportInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 1000000) val = 1000000;
+            currentApport = val;
+            apportSlider.value = val;
+            
+            // Synchronize with main Fonds Propres
+            currentFondsPropres = val;
+            fondsPropresInput.value = formatNumberWithSpaces(val);
+            fondsPropresSlider.value = val;
+            
+            updateSimulatorResults();
+        }
+    });
+
     apportInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 0) val = 0;
         if (val > 1000000) val = 1000000;
         currentApport = val;
-        apportInput.value = val;
+        apportInput.value = formatNumberWithSpaces(val);
         if (val > apportSlider.max) apportSlider.max = Math.ceil(val/10000)*10000;
         apportSlider.value = val;
         
         // Synchronize with main Fonds Propres
         currentFondsPropres = val;
-        fondsPropresInput.value = currentFondsPropres;
+        fondsPropresInput.value = formatNumberWithSpaces(val);
         if (val > fondsPropresSlider.max) fondsPropresSlider.max = Math.ceil(val/10000)*10000;
         fondsPropresSlider.value = currentFondsPropres;
         
@@ -1358,16 +1553,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Owner Charges Events
     ownerChargesSlider.addEventListener('input', (e) => {
         currentOwnerCharges = parseInt(e.target.value);
-        ownerChargesInput.value = currentOwnerCharges;
+        ownerChargesInput.value = formatNumberWithSpaces(currentOwnerCharges);
         updateBuyVsRentResults();
     });
 
+    ownerChargesInput.addEventListener('input', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (!isNaN(val)) {
+            if (val > 5000) val = 5000;
+            currentOwnerCharges = val;
+            ownerChargesSlider.value = val;
+            updateBuyVsRentResults();
+        }
+    });
+
     ownerChargesInput.addEventListener('change', (e) => {
-        let val = parseInt(e.target.value);
+        let val = parseFormattedNumber(e.target.value);
         if (isNaN(val) || val < 0) val = 0;
         if (val > 5000) val = 5000;
         currentOwnerCharges = val;
-        ownerChargesInput.value = val;
+        ownerChargesInput.value = formatNumberWithSpaces(val);
         if (val > ownerChargesSlider.max) ownerChargesSlider.max = val;
         ownerChargesSlider.value = val;
         updateBuyVsRentResults();
@@ -1434,10 +1639,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const eqPurchasePrice = document.getElementById('eq-purchase-price');
     const eqRent = document.getElementById('eq-rent');
 
-    const eqRatioVal = document.getElementById('eq-ratio-val');
-    const eqRatioBadge = document.getElementById('eq-ratio-badge');
-    const eqGaugeFill = document.getElementById('eq-gauge-fill');
-    const eqRatioAdvice = document.getElementById('eq-ratio-advice');
 
     const eqBuyMonthly = document.getElementById('eq-buy-monthly');
     const eqBuyLoan = document.getElementById('eq-buy-loan');
@@ -1446,6 +1647,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const eqRentMonthly = document.getElementById('eq-rent-monthly');
     const eqRentBase = document.getElementById('eq-rent-base');
+
+    // Equivalence savings rate selector
+    let eqCurrentSavingsRate = 3.0;
+    const eqSavingsRateInput = document.getElementById('eq-savings-rate-input');
+    const eqSavingsRateSlider = document.getElementById('eq-savings-rate-slider');
+    const eqSavingsRatePresets = document.querySelectorAll('[data-eq-rate]');
+
+    // Equivalence comparison elements
+    const eqSavingsRateLbl = document.getElementById('eq-savings-rate-lbl');
+    const eqBuyRentBanner = document.getElementById('eq-buy-rent-banner');
+    const eqBuyRentWinnerTitle = document.getElementById('eq-buy-rent-winner-title');
+    const eqBuyRentWinnerDiff = document.getElementById('eq-buy-rent-winner-diff');
+    const eqBuyerFinalWealth = document.getElementById('eq-buyer-final-wealth');
+    const eqBuyerPropertyPart = document.getElementById('eq-buyer-property-part');
+    const eqBuyerSavingsPart = document.getElementById('eq-buyer-savings-part');
+    const eqRenterFinalWealth = document.getElementById('eq-renter-final-wealth');
+    const eqRenterPortfolioPart = document.getElementById('eq-renter-portfolio-part');
+    const eqRenterSpentPart = document.getElementById('eq-renter-spent-part');
+    const eqBreakevenLabel = document.getElementById('eq-breakeven-label');
+    const eqBuyRentChartContainer = document.getElementById('eq-buy-rent-chart-svg-container');
 
     // Tab toggling
     navBtnSimulator.addEventListener('click', () => {
@@ -1470,69 +1691,85 @@ document.addEventListener('DOMContentLoaded', () => {
         const profileKey = eqProfileSelect.value;
         const data = equivalenceData[regionKey][profileKey];
         if (data) {
-            eqPurchasePrice.value = data.price;
-            eqRent.value = data.rent;
+            eqPurchasePrice.value = formatNumberWithSpaces(data.price);
+            eqRent.value = formatNumberWithSpaces(data.rent);
         }
         updateEquivalenceResults();
     }
 
     eqRegionSelect.addEventListener('change', loadEquivalenceProfile);
     eqProfileSelect.addEventListener('change', loadEquivalenceProfile);
-    eqPurchasePrice.addEventListener('input', updateEquivalenceResults);
-    eqRent.addEventListener('input', updateEquivalenceResults);
+    
+    eqPurchasePrice.addEventListener('input', () => {
+        updateEquivalenceResults();
+    });
+    eqPurchasePrice.addEventListener('change', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (isNaN(val) || val < 10000) val = 10000;
+        if (val > 3000000) val = 3000000;
+        e.target.value = formatNumberWithSpaces(val);
+        updateEquivalenceResults();
+    });
+
+    eqRent.addEventListener('input', () => {
+        updateEquivalenceResults();
+    });
+    eqRent.addEventListener('change', (e) => {
+        let val = parseFormattedNumber(e.target.value);
+        if (isNaN(val) || val < 100) val = 100;
+        if (val > 15000) val = 15000;
+        e.target.value = formatNumberWithSpaces(val);
+        updateEquivalenceResults();
+    });
+
+    // Equivalence savings rate listeners
+    function eqCheckPresetHighlight(rate) {
+        eqSavingsRatePresets.forEach(btn => {
+            btn.classList.toggle('active', parseFloat(btn.dataset.eqRate) === rate);
+        });
+    }
+    eqSavingsRateSlider.addEventListener('input', (e) => {
+        eqCurrentSavingsRate = parseFloat(e.target.value);
+        eqSavingsRateInput.value = eqCurrentSavingsRate.toFixed(1);
+        eqCheckPresetHighlight(eqCurrentSavingsRate);
+        updateEquivalenceResults();
+    });
+    eqSavingsRateInput.addEventListener('change', (e) => {
+        let val = parseFloat(e.target.value);
+        if (isNaN(val) || val < 0) val = 0;
+        if (val > 15) val = 15;
+        eqCurrentSavingsRate = val;
+        eqSavingsRateInput.value = val.toFixed(1);
+        if (val > eqSavingsRateSlider.max) eqSavingsRateSlider.max = Math.ceil(val);
+        eqSavingsRateSlider.value = val;
+        eqCheckPresetHighlight(val);
+        updateEquivalenceResults();
+    });
+    eqSavingsRatePresets.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = parseFloat(btn.dataset.eqRate);
+            eqCurrentSavingsRate = val;
+            eqSavingsRateInput.value = val.toFixed(1);
+            eqSavingsRateSlider.value = val;
+            eqCheckPresetHighlight(val);
+            updateEquivalenceResults();
+        });
+    });
 
     function updateEquivalenceResults() {
-        const price = parseFloat(eqPurchasePrice.value) || 0;
-        const rent = parseFloat(eqRent.value) || 0;
+        const price = parseFormattedNumber(eqPurchasePrice.value) || 0;
+        const rent = parseFormattedNumber(eqRent.value) || 0;
         const regionKey = eqRegionSelect.value;
         const profileKey = eqProfileSelect.value;
         
-        // 1. Calculate Price-to-Rent Ratio
-        let ratio = 0;
-        if (rent > 0) {
-            ratio = price / (rent * 12);
-        }
-        
-        eqRatioVal.textContent = ratio.toFixed(1);
-        
-        // Update advice and badge
-        if (ratio <= 0) {
-            eqRatioBadge.textContent = "N/A";
-            eqRatioBadge.className = "ratio-badge badge-neutral";
-            eqGaugeFill.style.width = "0%";
-            eqGaugeFill.style.backgroundColor = "var(--text-muted)";
-            eqRatioAdvice.textContent = "Veuillez entrer des valeurs valides.";
-        } else if (ratio < 15) {
-            eqRatioBadge.textContent = "Achat Favorable";
-            eqRatioBadge.className = "ratio-badge badge-buy";
-            const pct = Math.min(40, (ratio / 15) * 40);
-            eqGaugeFill.style.width = `${pct}%`;
-            eqGaugeFill.style.backgroundColor = "var(--accent-primary)";
-            eqRatioAdvice.textContent = `Un ratio de ${ratio.toFixed(1)} indique qu'il est très favorable d'acheter ce bien plutôt que de le louer (le prix d'achat équivaut à moins de 15 ans de loyers).`;
-        } else if (ratio <= 20) {
-            eqRatioBadge.textContent = "Équilibré";
-            eqRatioBadge.className = "ratio-badge badge-neutral";
-            const pct = 40 + ((ratio - 15) / 5) * 25;
-            eqGaugeFill.style.width = `${pct}%`;
-            eqGaugeFill.style.backgroundColor = "#fbbf24";
-            eqRatioAdvice.textContent = `Un ratio de ${ratio.toFixed(1)} indique que l'achat ou la location sont financièrement équilibrés. La décision dépendra de votre situation personnelle et de vos plans à long terme.`;
-        } else {
-            eqRatioBadge.textContent = "Location Favorable";
-            eqRatioBadge.className = "ratio-badge badge-rent";
-            const pct = Math.min(100, 65 + ((ratio - 20) / 10) * 35);
-            eqGaugeFill.style.width = `${pct}%`;
-            eqGaugeFill.style.backgroundColor = "var(--accent-secondary)";
-            eqRatioAdvice.textContent = `Un ratio de ${ratio.toFixed(1)} indique qu'il est préférable de louer ce bien (le prix d'achat équivaut à plus de 20 ans de loyers). Vous pourrez épargner et placer la différence financièrement.`;
-        }
-
-        // 2. Outflow Calculations
+        // Outflow Calculations
         const totalRent = rent + 50; // Rent + 50 € renter charges
         eqRentMonthly.textContent = formatCurrency(totalRent);
         eqRentBase.textContent = formatCurrency(rent);
 
         // Buy Outflow: assume 80% LTV (20% own funds)
         const loanCapital = price * 0.8;
-        const rate = 3.41;
+        const rate = 4.0;
         const duration = 25;
         const monthlyPayment = calculateMonthlyPayment(loanCapital, rate, duration);
 
@@ -1572,18 +1809,137 @@ document.addEventListener('DOMContentLoaded', () => {
         eqBuyLoan.textContent = formatCurrency(monthlyPayment);
         eqBuyFees.textContent = formatCurrency(totalFees);
         eqBuyTax.textContent = formatCurrency(monthlyPI) + " / mois est.";
+
+        // --- Buy vs Rent wealth creation simulation for Equivalence ---
+        const totalMonths = duration * 12;
+        const monthlySavingsRate = Math.pow(1 + eqCurrentSavingsRate / 100, 1 / 12) - 1;
+        
+        // Renter starts with the sum of down payment (20% of price) + transaction fees
+        const downPayment = price * 0.2;
+        let renterPortfolio = downPayment + totalFees;
+        let buyerPortfolio = 0;
+        let totalRentPaid = 0;
+        
+        const eqSchedule = computeAmortizationSchedule(loanCapital, rate, duration);
+        const eqPoints = [];
+        eqPoints.push({
+            month: 0,
+            buyerWealth: price - loanCapital, // Initial equity: purchase price - loan
+            renterWealth: downPayment + totalFees
+        });
+        
+        let currentRentAmount = rent;
+        
+        for (let m = 1; m <= totalMonths; m++) {
+            // Rent inflation applied yearly
+            if (m > 1 && (m - 1) % 12 === 0) {
+                currentRentAmount = currentRentAmount * (1 + currentRentInflation / 100);
+            }
+            
+            totalRentPaid += currentRentAmount;
+            
+            // Outflows
+            const buyerCost = totalBuyOutflow; // monthlyPayment + 200 + monthlyPI
+            const renterCost = currentRentAmount + 50; // rent + 50 € renter charges
+            
+            // Difference in monthly budgets
+            const diff = buyerCost - renterCost;
+            
+            if (diff > 0) {
+                // Renting is cheaper: Renter saves the difference
+                renterPortfolio = renterPortfolio * (1 + monthlySavingsRate) + diff;
+                buyerPortfolio = buyerPortfolio * (1 + monthlySavingsRate);
+            } else {
+                // Buying is cheaper: Buyer saves the difference (diff is negative)
+                buyerPortfolio = buyerPortfolio * (1 + monthlySavingsRate) - diff;
+                renterPortfolio = renterPortfolio * (1 + monthlySavingsRate);
+            }
+            
+            // Appreciated property value over time
+            const propertyValue = price * Math.pow(1 + currentAppreciation / 100, m / 12);
+            
+            // Remaining loan balance
+            const remainingLoan = eqSchedule[m - 1] ? eqSchedule[m - 1].remainingBalance : 0;
+            
+            // Net wealth (actifs - passifs)
+            const buyerWealth = propertyValue - remainingLoan + buyerPortfolio;
+            const renterWealth = renterPortfolio;
+            
+            eqPoints.push({
+                month: m,
+                buyerWealth,
+                renterWealth
+            });
+        }
+        
+        const finalBuyerWealth = eqPoints[totalMonths].buyerWealth;
+        const finalRenterWealth = eqPoints[totalMonths].renterWealth;
+        const finalPropertyValue = price * Math.pow(1 + currentAppreciation / 100, duration);
+        
+        // Cache variables for resize
+        lastEqBuyVsRentPoints = eqPoints;
+        
+        // Update DOM Results for Equivalence
+        if (eqSavingsRateLbl) eqSavingsRateLbl.textContent = eqCurrentSavingsRate.toFixed(1) + '%';
+        if (eqBuyerFinalWealth) {
+            eqBuyerFinalWealth.textContent = formatCurrency(finalBuyerWealth);
+            eqBuyerPropertyPart.textContent = `Valeur bien : ${formatCurrency(finalPropertyValue)}`;
+            eqBuyerSavingsPart.textContent = `Portefeuille : ${formatCurrency(buyerPortfolio)}`;
+            
+            eqRenterFinalWealth.textContent = formatCurrency(finalRenterWealth);
+            eqRenterPortfolioPart.textContent = `Portefeuille : ${formatCurrency(finalRenterWealth)}`;
+            eqRenterSpentPart.textContent = `Loyers payés : ${formatCurrency(totalRentPaid)}`;
+        }
+        
+        // Highlight winner
+        const diffWealth = Math.abs(finalBuyerWealth - finalRenterWealth);
+        if (eqBuyRentBanner) {
+            if (finalBuyerWealth >= finalRenterWealth) {
+                eqBuyRentBanner.className = "comparison-banner winner-buyer";
+                eqBuyRentWinnerTitle.textContent = "L'Achat est plus avantageux !";
+                eqBuyRentWinnerDiff.textContent = `+ ${formatCurrency(diffWealth)} de patrimoine net après ${duration} ans`;
+            } else {
+                eqBuyRentBanner.className = "comparison-banner winner-renter";
+                eqBuyRentWinnerTitle.textContent = "La Location est plus avantageuse !";
+                eqBuyRentWinnerDiff.textContent = `+ ${formatCurrency(diffWealth)} de patrimoine net après ${duration} ans`;
+            }
+        }
+        
+        // Breakeven Point calculation (crossing point)
+        let breakevenMonth = -1;
+        for (let m = 1; m <= totalMonths; m++) {
+            if (eqPoints[m].buyerWealth > eqPoints[m].renterWealth && eqPoints[m-1].buyerWealth <= eqPoints[m-1].renterWealth) {
+                breakevenMonth = m;
+                break;
+            }
+        }
+        
+        lastEqBreakevenMonth = breakevenMonth;
+        
+        if (eqBreakevenLabel) {
+            if (breakevenMonth !== -1) {
+                eqBreakevenLabel.textContent = `Seuil de rentabilité : ${Math.ceil(breakevenMonth / 12)} ans`;
+                eqBreakevenLabel.style.display = 'inline-block';
+            } else {
+                eqBreakevenLabel.textContent = 'Seuil de rentabilité : non atteint';
+                eqBreakevenLabel.style.display = 'inline-block';
+            }
+        }
+        
+        // Render Equivalence Wealth accumulation chart
+        renderEqBuyVsRentChart(eqPoints, breakevenMonth);
     }
 
     // --- Initialization ---
     // Make sure values match UI inputs initially
     regionSelect.value = currentRegion;
-    purchasePriceInput.value = currentPurchasePrice;
+    purchasePriceInput.value = formatNumberWithSpaces(currentPurchasePrice);
     purchasePriceSlider.value = currentPurchasePrice;
-    renovationsInput.value = currentRenovations;
+    renovationsInput.value = formatNumberWithSpaces(currentRenovations);
     renovationsSlider.value = currentRenovations;
-    rcInput.value = currentRC;
+    rcInput.value = formatNumberWithSpaces(currentRC);
     rcSlider.value = currentRC;
-    fondsPropresInput.value = currentFondsPropres;
+    fondsPropresInput.value = formatNumberWithSpaces(currentFondsPropres);
     fondsPropresSlider.value = currentFondsPropres;
 
     rateInput.value = currentRate.toFixed(2);
@@ -1591,18 +1947,18 @@ document.addEventListener('DOMContentLoaded', () => {
     durationInput.value = currentDuration;
     durationSlider.value = currentDuration;
 
-    rentInput.value = currentRent;
+    rentInput.value = formatNumberWithSpaces(currentRent);
     rentSlider.value = currentRent;
-    apportInput.value = currentApport;
+    apportInput.value = formatNumberWithSpaces(currentApport);
     apportSlider.value = currentApport;
     savingsRateInput.value = currentSavingsRate.toFixed(1);
     savingsRateSlider.value = currentSavingsRate;
-    ownerChargesInput.value = currentOwnerCharges;
+    ownerChargesInput.value = formatNumberWithSpaces(currentOwnerCharges);
     ownerChargesSlider.value = currentOwnerCharges;
     appreciationInput.value = currentAppreciation.toFixed(1);
     rentInflationInput.value = currentRentInflation.toFixed(1);
     
-    incomeInput.value = currentMonthlyIncome;
+    incomeInput.value = formatNumberWithSpaces(currentMonthlyIncome);
     incomeSlider.value = currentMonthlyIncome;
 
     // Set theme based on system preference (default is dark in CSS, check if light preferred)
@@ -1619,6 +1975,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLineChart();
         if (lastBuyVsRentPoints.length > 0) {
             renderBuyVsRentChart(lastBuyVsRentPoints, lastBreakevenMonth);
+        }
+        if (lastEqBuyVsRentPoints.length > 0) {
+            renderEqBuyVsRentChart(lastEqBuyVsRentPoints, lastEqBreakevenMonth);
         }
     });
 });
